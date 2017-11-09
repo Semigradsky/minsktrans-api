@@ -1,0 +1,46 @@
+{
+  "name": "minsktrans-api",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "babel lib --out-dir dist",
+    "prepublish": "npm run build",
+    "start": "micro-serve -p 8080 dist/",
+    "dev": "babel-node run.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Semigradsky/minsktrans-api.git"
+  },
+  "keywords": [],
+  "author": "Dmitry Semigradsky <semigradskyd@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Semigradsky/minsktrans-api/issues"
+  },
+  "homepage": "https://github.com/Semigradsky/minsktrans-api#readme",
+  "babel": {
+    "plugins": [
+      "transform-es2015-modules-commonjs",
+      "transform-async-to-generator"
+    ]
+  },
+  "dependencies": {
+    "fs-extra": "^4.0.2",
+    "micro": "^9.0.1",
+    "micro-core": "^0.4.0",
+    "microrouter": "^3.0.0",
+    "request": "^2.83.0",
+    "request-promise": "^4.2.2",
+    "winston": "^3.0.0-rc1"
+  },
+  "devDependencies": {
+    "babel-cli": "^6.26.0",
+    "babel-plugin-transform-async-to-generator": "^6.24.1",
+    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
+    "eslint": "^4.10.0",
+    "micro-core": "^0.4.0"
+  }
+}
