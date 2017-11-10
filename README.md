@@ -5,10 +5,8 @@ Raw files
 - `/times`
 
 JSON
+- `/routes.json`
 - `/stops.json`
 
 KML
 - `/stops.kml`
-
-Logs
-- `/logs/all`
