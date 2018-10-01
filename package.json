@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "babel lib --out-dir dist",
+    "build": "babel server --out-dir dist",
     "prepublish": "npm run build",
     "start": "micro-serve -p 8080 dist/",
     "dev": "babel-node run.js"
@@ -32,7 +32,10 @@
     "micro": "^9.0.1",
     "micro-core": "^0.4.0",
     "microrouter": "^3.0.0",
-    "request": "^2.83.0",
+    "mustache": "^3.0.0",
+    "query-overpass": "^1.5.3",
+    "querystring": "^0.2.0",
+    "request": "^2.88.0",
     "request-promise": "^4.2.2",
     "winston": "^3.0.0-rc1"
   },

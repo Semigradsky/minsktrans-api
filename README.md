@@ -16,8 +16,12 @@ JSON
     {
         "id": "210146",
         "routeNum": "11",
+        "transport": "bus", // bus | trol | tram | metro
         "operator": "5 АП",
-        "validityPeriods": "17480,", // optional
+        "validityPeriods": { // optional
+            "from": 17537,  // the number of days (1 day = 1000 * 60 * 60 * 24 milliseconds) elapsed since January 1, 1970 00:00:00 UTC.
+            "to": 17547 // optional
+        },
         "routeType": "A>B",
         "routeTag": 0.17, // optional
         "routeName": "ДС Веснянка - Маршала Лосика",
@@ -39,7 +43,8 @@ JSON
         "id": "15288",
         "name": "1-й Наклонный пер.",
         "lng": 27.6556,
-        "lat": 53.88226,
+		"lat": 53.88226,
+		"street": "ул. Радиальная", // optional
         "stops": [
             "15289",
             "15408"

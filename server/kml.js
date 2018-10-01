@@ -1,5 +1,5 @@
 import { getFileFromCache, saveFileToCache } from './cache'
-import { getStops } from './stops'
+import { getJSON as getStopsJSON } from './stops'
 
 const createPlace = ({id, name, lng, lat}) => (
 `  <Placemark>
@@ -22,7 +22,7 @@ export async function getStopsKML () {
 	try {
 		return await getFileFromCache('stops.kml')
 	} catch (err) {
-		const stops = await getStops()
+		const stops = await getStopsJSON()
 		const result = createKML(stops)
 		await saveFileToCache('stops.kml', result)
 		return result

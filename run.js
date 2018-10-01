@@ -1,5 +1,5 @@
 import serve from 'micro-core';
-import api from './lib';
+import api from './server';
 
 serve(api).listen(8080, (err) => {
   if (err) throw err;

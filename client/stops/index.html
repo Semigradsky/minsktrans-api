@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OT Беларуси - валидатор</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css" rel="stylesheet">
+
+  <style>
+	  body {
+		margin: 0 10px;
+	  }
+	  table {
+		margin: 0 auto;
+	  }
+	  td {
+		padding: 4px;
+    	border: 1px solid grey;
+	  }
+	  tbody tr {
+		  display: none;
+	  }
+	  .show-all tbody tr {
+		display: table-row;
+	  }
+	  tr.invalid {
+		background: #f2dcdc;
+		display: table-row;
+	  }
+	  tr:hover {
+		background: #d7d7f4;
+	  }
+	  .edit-link {
+		float: right;
+		margin-left: 10px;
+		opacity: 0;
+	  }
+	  tr:hover .edit-link {
+		opacity: 1;
+	  }
+
+	  .loading-show {
+		display: none;
+	  }
+	  .loaded .loading-hide {
+		display: none;
+	  }
+	  .loaded .loading-show {
+		display: block;
+	  }
+  </style>
+  <noscript>
+	  <style>
+		  .loading-hide {
+			display: none;
+		  }
+		  .loading-show {
+			display: block;
+		  }
+	  </style>
+  </noscript>
+</head>
+<body>
+	<p>Всего остановок: {{stops.length}}</p>
+	<p>Из них не полностью замапленых: {{countInvalidStops}} ({{percentInvalidStops}}%)</p>
+
+	<b class="loading-hide">...</b>
+	<div class="loading-show">
+		<label>
+			<input id="showAll" type="checkbox" checked="checked">
+			Показывать все
+		</label>
+		<table id="stops-table">
+			<caption>Остановки</caption>
+			<thead>
+				<th style="width: 102px;">ref:minsktrans</th>
+				<th style="width: 18%;">Название остановки</th>
+				<th style="width: 24%;">Остановка в OSM</th>
+				<th style="width: 48px;">ref</th>
+				<th>Маршруты</th>
+				<th>Маршруты в OSM</th>
+			</thead>
+			<tbody>
+				{{#stops}}
+				<tr {{#invalid}}class="invalid"{{/invalid}}>
+					<td>{{stop.id}}</td>
+					<td>
+						<a href="{{osmLink}}" target="_blank">{{stop.name}}</a>
+						<a href="{{josmLink}}" class="edit-link" data-edit="josm" target="_blank">Edit</a>
+					</td>
+					<td>
+						<div>Платформа:&nbsp;
+							{{#platform}}
+								<a href="https://www.openstreetmap.org/node/{{platform.id}}" target="_blank">{{platform.tags.name:ru}}</a>
+							{{/platform}}
+							{{^platform}}
+								None
+							{{/platform}}
+						</div>
+						<div>Точка остановки:&nbsp;
+							{{#stopPosition}}
+								<a href="https://www.openstreetmap.org/node/{{stopPosition.id}}" target="_blank">{{stopPosition.tags.name:ru}}</a>
+							{{/stopPosition}}
+							{{^stopPosition}}
+								None
+							{{/stopPosition}}
+						</div>
+						<div>Перемычка:&nbsp;
+							{{#entrancePass}}
+								<a href="https://www.openstreetmap.org/way/{{entrancePass.id}}" target="_blank">{{entrancePass.id}}</a>
+							{{/entrancePass}}
+							{{^entrancePass}}
+								None
+							{{/entrancePass}}
+						</div>
+					</td>
+					<td>{{#platform}}{{platform.tags.ref}}{{/platform}}</td>
+					<td>
+						{{#routes}}
+							<div>
+								<a href="/route/{{id}}" target="_blank">{{name}}</a>
+							</div>
+						{{/routes}}
+					</td>
+					<td>
+						{{#osmRoutes}}
+							<div>
+							{{ref}} - {{name}}
+							</div>
+						{{/osmRoutes}}
+					</td>
+				</tr>
+				{{/stops}}
+			</tbody>
+		</table>
+	</div>
+
+	<script>
+		var showAllInput = document.querySelector('#showAll');
+		var stopsTable = document.querySelector('#stops-table');
+
+		showAllInput.addEventListener('change', function () {
+			setShowAll(toggleShowAll());
+		});
+
+		stopsTable.addEventListener('click', openInJosm);
+
+		document.addEventListener('DOMContentLoaded', init);
+
+		function openInJosm(event) {
+			if (event.target.getAttribute('data-edit') !== 'josm') {
+				return;
+			}
+
+			event.preventDefault();
+			var href = event.target.getAttribute('href');
+			var req = new XMLHttpRequest();
+			req.addEventListener('error', function (err, res) {
+				window.alert('Что-то не так.\nПроверьте запущен ли JOSM и Remote Control.');
+			});
+			req.open('GET', href);
+			req.send();
+		}
+
+		function init() {
+			var showAll = !(localStorage.getItem('show-only-invalid') === 'true');
+			showAll ?
+				showAllInput.setAttribute('checked', 'checked') :
+				showAllInput.removeAttribute('checked');
+			setShowAll(showAll);
+
+			document.body.setAttribute('class', 'loaded');
+		}
+
+		function toggleShowAll() {
+			var showOnlyInvalid = !(localStorage.getItem('show-only-invalid') === 'true');
+			localStorage.setItem('show-only-invalid', showOnlyInvalid);
+			return !showOnlyInvalid;
+		}
+
+		function setShowAll(showAll) {
+			stopsTable.setAttribute('class', showAll ? 'show-all' : '');
+		}
+	</script>
+</body>
+</html>

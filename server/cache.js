@@ -2,14 +2,13 @@ import fs from 'fs-extra'
 import path from 'path'
 import { logger } from './logs'
 import os from 'os'
+import config from './../config';
 
-const ONE_DAY = 1000 * 60 * 60 * 24
-
-export async function getFileFromCache (fileName) {
+export async function getFileFromCache (fileName, cacheTime = config.cache.default) {
 	const fsName = path.resolve(os.tmpdir(), fileName)
 	const fstat = await fs.stat(fsName)
 
-	if (+fstat.mtime + ONE_DAY < Date.now()) {
+	if (+fstat.mtime + cacheTime < Date.now()) {
 		logger.info(`${fileName} is old, need getting new file`)
 		throw new Error('TOO OLD')
 	}

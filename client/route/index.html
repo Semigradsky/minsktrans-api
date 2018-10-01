@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>OT Беларуси - валидатор</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css" rel="stylesheet">
+
+  <style>
+	  body {
+		  margin: 20px;
+	  }
+	  td {
+		padding: 4px;
+    	border: 1px solid grey;
+	  }
+	  tr.invalid {
+		background: #f2dcdc;
+	  }
+	  tr:hover {
+		background: #d7d7f4;
+	  }
+	  .edit-link {
+		float: right;
+		margin-left: 10px;
+		opacity: 0;
+	  }
+	  tr:hover .edit-link {
+		opacity: 1;
+	  }
+
+	  .osm-stops {
+		list-style: none;
+		padding: 0;
+		width: 40%;
+	  }
+	  .osm-stops li {
+		background: #e0ffe0;
+		border: 1px solid white;
+	  }
+	  .osm-stops li.has-action {
+		background: #ffa4a4;
+	  }
+	  .osm-stops .osm-stop-name,
+	  .osm-stops .action {
+		  display: inline-block;
+	  }
+  </style>
+</head>
+<body>
+	<h1>{{name}}</h1>
+	<table>
+		<thead>
+			<th>ref:minsktrans</th>
+			<th>Название остановки</th>
+			<th>Остановка в OSM</th>
+			<th>ref</th>
+		</thead>
+		<tbody>
+			{{#stops}}
+			<tr {{#invalid}}class="invalid"{{/invalid}}>
+				<td>{{stop.id}}</td>
+				<td>
+					<a href="{{osmLink}}" target="_blank">{{stop.name}}</a>
+					<a href="{{josmLink}}" class="edit-link" data-edit="josm" target="_blank">Edit</a>
+				</td>
+				<td>
+					<div>Платформа:&nbsp;
+						{{#platform}}
+							<a href="https://www.openstreetmap.org/node/{{platform.id}}" target="_blank">{{platform.tags.name:ru}}</a>
+						{{/platform}}
+						{{^platform}}
+							None
+						{{/platform}}
+					</div>
+					<div>Точка остановки:&nbsp;
+						{{#stopPosition}}
+							<a href="https://www.openstreetmap.org/node/{{stopPosition.id}}" target="_blank">{{stopPosition.tags.name:ru}}</a>
+						{{/stopPosition}}
+						{{^stopPosition}}
+							None
+						{{/stopPosition}}
+					</div>
+					<div>Перемычка:&nbsp;
+						{{#entrancePass}}
+							<a href="https://www.openstreetmap.org/way/{{entrancePass.id}}" target="_blank">{{entrancePass.id}}</a>
+						{{/entrancePass}}
+						{{^entrancePass}}
+							None
+						{{/entrancePass}}
+					</div>
+				</td>
+				<td>{{#platform}}{{platform.tags.ref}}{{/platform}}</td>
+			</tr>
+			{{/stops}}
+		</tbody>
+	</table>
+
+	{{#osmRoutes.length}}
+	<h2>Похожие маршруты в OSM</h2>
+	<ul>
+	{{#osmRoutes}}
+		<li>
+			<p><a href="https://www.openstreetmap.org/relation/{{relation.id}}" target="_blank">{{relation.tags.name}}</a></p>
+			<p><a href="http://127.0.0.1:8111/load_object?new_layer=false&objects=r{{relation.id}}" data-edit="josm" target="_blank">Редактировать в ОСМ</a></p>
+			<ul class="osm-stops">
+				{{#stops}}
+				<li class="{{#action}}has-action{{/action}}" title="{{title}}">
+					<div class="action">{{#action}}{{.}}{{/action}}</div>
+					<div class="osm-stop-name">{{#stop}}{{#tags.name:ru}}{{.}}{{/tags.name:ru}}{{^tags.name:ru}}{{tags.name}}{{/tags.name:ru}}{{/stop}}</div>
+				</li>
+				{{/stops}}
+			</ul>
+
+		</li>
+	{{/osmRoutes}}
+	</ul>
+	{{/osmRoutes.length}}
+	{{^osmRoutes}}
+	<p>Похожих маршрутов в ОСМ не найдено. Возможно отличается тег ref от номера маршрута у Минсктранса.</p>
+	{{/osmRoutes}}
+
+	<h2>Автоматическая генерация маршрута</h2>
+	{{#noMappedStops.length}}
+		<p>Не могу автоматически сгенерировать маршрут, т.к. не все остановки маршрута имеют аналогов в ОСМ (не проставлены все ref:minsktrans)</p>
+	{{/noMappedStops.length}}
+	{{^noMappedStops}}
+		<p>Все остановки маршрута имеют аналоги в ОСМ...</p>
+		<p>...но я пока это не умею :)</p>
+	{{/noMappedStops}}
+</body>
+
+	<script>
+		document.body.addEventListener('click', openInJosm);
+
+		function openInJosm(event) {
+			if (event.target.getAttribute('data-edit') !== 'josm') {
+				return;
+			}
+
+			event.preventDefault();
+			var href = event.target.getAttribute('href');
+			var req = new XMLHttpRequest();
+			req.addEventListener('error', function (err, res) {
+				window.alert('Что-то не так.\nПроверьте запущен ли JOSM и Remote Control.');
+			});
+			req.open('GET', href);
+			req.send();
+		}
+	</script>
+</html>
