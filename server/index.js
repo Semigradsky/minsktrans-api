@@ -1,8 +1,8 @@
 import Mustache from 'mustache';
 import { send } from 'micro'
 import { router, get } from 'microrouter'
+import fs from 'fs-extra'
 
-const fs = require('fs');
 const path = require('path');
 
 import { logger } from './logs'
@@ -39,7 +39,7 @@ async function serveHTML (req, res, dataAsyncGetter, fileName) {
 	const document = path.join(__dirname, '/../client', fileName);
 
 	try {
-		const template = fs.readFileSync(document, 'utf8');
+		const template = await fs.readFile(document, 'utf8');
 		const data = await dataAsyncGetter(req.params);
 		const html = Mustache.render(template, data);
 		res.end(html);
