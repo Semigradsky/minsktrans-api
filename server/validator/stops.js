@@ -82,6 +82,8 @@ export default async function () {
 				name: `${transportNames[r.transport]} №${r.routeNum} - ${r.routeName}`,
 			})).sort(sortFunc('name'));
 
+		const checkDate = platform ? platform.tags['check_date'] || platform.tags['minsk_PT:checked'] : null;
+
 		data.stops.push({
 			osmLink: `https://www.openstreetmap.org/?mlat=${stop.lat}&mlon=${stop.lng}#map=19/${stop.lat + 0.0001}/${stop.lng + 0.0001}`,
 			josmLink: `http://127.0.0.1:8111/load_and_zoom?left=${stop.lng - 0.001}&right=${stop.lng + 0.001}&top=${stop.lat + 0.0006}&bottom=${stop.lat - 0.0006}`,
@@ -93,6 +95,7 @@ export default async function () {
 			invalid: !platform || !stopPosition || !entrancePass,
 			osmRoutes,
 			routes,
+			checkDate,
 		});
 	}
 

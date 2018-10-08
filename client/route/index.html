@@ -40,7 +40,7 @@
 		border: 1px solid white;
 	  }
 	  .osm-stops li.has-action {
-		background: #ffa4a4;
+		background: #f4d6d6;
 	  }
 	  .osm-stops .osm-stop-name,
 	  .osm-stops .action {
@@ -49,6 +49,7 @@
   </style>
 </head>
 <body>
+	<a href="/stops">&lt;&lt;&lt; Все остановки</a>
 	<h1>{{name}}</h1>
 	<table>
 		<thead>
@@ -56,6 +57,7 @@
 			<th>Название остановки</th>
 			<th>Остановка в OSM</th>
 			<th>ref</th>
+			<th style="width: 84px;">check-date</th>
 		</thead>
 		<tbody>
 			{{#stops}}
@@ -92,6 +94,7 @@
 					</div>
 				</td>
 				<td>{{#platform}}{{platform.tags.ref}}{{/platform}}</td>
+				<td>{{checkDate}}</td>
 			</tr>
 			{{/stops}}
 		</tbody>
@@ -126,8 +129,8 @@
 		<p>Не могу автоматически сгенерировать маршрут, т.к. не все остановки маршрута имеют аналогов в ОСМ (не проставлены все ref:minsktrans)</p>
 	{{/noMappedStops.length}}
 	{{^noMappedStops}}
-		<p>Все остановки маршрута имеют аналоги в ОСМ...</p>
-		<p>...но я пока это не умею :)</p>
+		<p>Все остановки маршрута имеют аналоги в ОСМ.</p>
+		<p><a href="{{generateOSMLink}}" data-edit="josm" target="_blank">Сгенерировать маршрут</a></p>
 	{{/noMappedStops}}
 </body>
 

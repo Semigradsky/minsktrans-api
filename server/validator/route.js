@@ -61,6 +61,8 @@ export default async function routeValidator({ routeId }) {
 			entrancePass = osmStop.entrancePass;
 		}
 
+		const checkDate = platform ? platform.tags['check_date'] || platform.tags['minsk_PT:checked'] : null;
+
 		return {
 			stop,
 			platform,
@@ -69,6 +71,7 @@ export default async function routeValidator({ routeId }) {
 			invalid: !platform || !stopPosition || !entrancePass,
 			osmLink: `https://www.openstreetmap.org/?mlat=${stop.lat}&mlon=${stop.lng}#map=19/${stop.lat + 0.0001}/${stop.lng + 0.0001}`,
 			josmLink: `http://127.0.0.1:8111/load_and_zoom?left=${stop.lng - 0.001}&right=${stop.lng + 0.001}&top=${stop.lat + 0.0006}&bottom=${stop.lat - 0.0006}`,
+			checkDate,
 		};
 	});
 	data.noMappedStops = data.stops.filter(s => !s.platform);
@@ -157,5 +160,30 @@ export default async function routeValidator({ routeId }) {
 		stops: mapStops(r.stops, data.stops),
 	}));
 
+	if (!data.noMappedStops.length) {
+		data.generateOSMLink = generateOSMLink(data.name, transport, route.routeNum, data.stops)
+	}
+
 	return data;
+}
+
+function generateOSMLink(routeName, transport, ref, stops) {
+	const osmData = `<?xml version='1.0' encoding='UTF-8'?>
+<osm version='0.6' generator='JOSM'>
+	<relation id='-39244' action='modify' visible='true'>` + (stops.map(s => {
+		return (
+			(s.stopPosition ? `<member type='node' ref='${s.stopPosition.id}' role='stop' />\n` : '') +
+			`<member type='node' ref='${s.platform.id}' role='platform' />`
+		);
+	})) + `
+		<tag k='name' v='${routeName}' />
+		<tag k='route' v='${transport}' />
+		<tag k='type' v='route' />
+		<tag k='public_transport:version' v='2' />
+		<tag k='operator' v='ГП &quot;Минсктранс&quot;' />
+		<tag k='ref' v='${ref}' />
+	</relation>
+</osm>`;
+
+	return `http://127.0.0.1:8111/load_data?new_layer=false&data=${encodeURIComponent(osmData)}`;
 }

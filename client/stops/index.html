@@ -78,6 +78,7 @@
 				<th style="width: 18%;">Название остановки</th>
 				<th style="width: 24%;">Остановка в OSM</th>
 				<th style="width: 48px;">ref</th>
+				<th style="width: 84px;">check-date</th>
 				<th>Маршруты</th>
 				<th>Маршруты в OSM</th>
 			</thead>
@@ -116,6 +117,7 @@
 						</div>
 					</td>
 					<td>{{#platform}}{{platform.tags.ref}}{{/platform}}</td>
+					<td>{{checkDate}}</td>
 					<td>
 						{{#routes}}
 							<div>
