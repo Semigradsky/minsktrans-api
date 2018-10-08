@@ -4,10 +4,14 @@ import { getFileFromCache, saveFileToCache } from './cache'
 async function generateCSV () {
 	const stops = await getJSON()
 
-	let result = 'ID;Name;Lng;Lat;Stops'
+	let result = 'ID;Name;Lng;Lat;Street;Stops'
 	for (const stop of stops) {
-		const { id, name, lng, lat, street, stops } = stop
-		result += `\n${id};${name};${lng};${lat};${street},"${stops.join(',')}"`
+		let { id, name, lng, lat, street, stops } = stop
+
+		street = street ? `"${street}"` : ''
+		stops = `"${stops.join(',')}"`
+
+		result += `\n${id};${name};${lng};${lat};${street};${stops}`
 	}
 
 	return result

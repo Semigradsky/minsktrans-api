@@ -4,10 +4,18 @@ import { getFileFromCache, saveFileToCache } from './cache'
 async function generateCSV () {
 	const routes = await getJSON()
 
-	let result = 'ID;RouteNum;Transport;Operator;ValidityPeriods;RouteTag;RouteType;RouteName;Weekdays;RouteStops;Datestart'
+	let result = 'ID;RouteNum;Transport;Operator;ValidityPeriodsFrom;ValidityPeriodsFromTo;RouteTag;RouteType;RouteName;Weekdays;RouteStops;Datestart'
 	for (const route of routes) {
-		const { id, routeNum, transport, operator, validityPeriods, routeTag, routeType, routeName, weekdays, stops, datestart } = route
-		result += `\n${id};${routeNum};${transport};${operator};${validityPeriods || ''};${routeTag || ''};${routeType};${routeName};${weekdays || ''};"${stops.join(',')}";${datestart || ''}`
+		let { id, routeNum, transport, operator, validityPeriods, routeTag, routeType, routeName, weekdays, stops, datestart } = route
+
+		const validityPeriodsFrom = validityPeriods && validityPeriods.from || ''
+		const validityPeriodsTo = validityPeriods && validityPeriods.to || ''
+		routeTag = routeTag || ''
+		weekdays = weekdays || ''
+		stops = `"${stops.join(',')}"`
+		datestart = datestart || ''
+
+		result += `\n${id};${routeNum};${transport};${operator};${validityPeriodsFrom};${validityPeriodsTo};${routeTag};${routeType};${routeName};${weekdays};${stops};${datestart}`
 	}
 
 	return result

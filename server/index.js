@@ -57,10 +57,10 @@ export default router(
 	get('/:file.txt', (req, res) => serveFile(req, res, () => getRawFile(`${req.params.file}.txt`), 'text/plain')),
 
 	get('/routes.json', (req, res) => serveFile(req, res, () => routes.getJSON(), 'application/json')),
-	// get('/routes.csv', (req, res) => serveFile(req, res, () => routes.getCSV(), 'text/csv')),
+	get('/routes.csv', (req, res) => serveFile(req, res, () => routes.getCSV(), 'text/csv')),
 
 	get('/stops.json', (req, res) => serveFile(req, res, () => stops.getJSON(), 'application/json')),
-	// get('/stops.csv', (req, res) => serveFile(req, res, () => stops.getCSV(), 'text/csv')),
+	get('/stops.csv', (req, res) => serveFile(req, res, () => stops.getCSV(), 'text/csv')),
 
 	get('/stops.kml', (req, res) => serveFile(req, res, () => getStopsKML(), 'application/vnd.google-earth.kml+xml')),
 
