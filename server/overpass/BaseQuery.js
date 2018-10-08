@@ -3,7 +3,7 @@ const querystring = require('querystring')
 
 import { getFileFromCache, saveFileToCache } from './../cache'
 import { logger } from './../logs'
-import config from './../../config';
+import config from './../config';
 
 export default class BaseQuery {
 	execute(query, callback) {

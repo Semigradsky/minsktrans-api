@@ -2,7 +2,7 @@ import fs from 'fs-extra'
 import path from 'path'
 import { logger } from './logs'
 import os from 'os'
-import config from './../config';
+import config from './config';
 
 export async function getFileFromCache (fileName, cacheTime = config.cache.default) {
 	const fsName = path.resolve(os.tmpdir(), fileName)
