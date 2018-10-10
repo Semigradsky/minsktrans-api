@@ -168,12 +168,19 @@ export default async function routeValidator({ routeId }) {
 }
 
 function generateOSMLink(routeName, transport, ref, stops) {
+	const relationId = -Math.ceil((Math.random() * 100000));
+
 	const osmData = `<?xml version='1.0' encoding='UTF-8'?>
 <osm version='0.6' generator='JOSM'>
-	<relation id='-39244' action='modify' visible='true'>` + (stops.map(s => {
+	<relation id='${relationId}' action='modify' visible='true'>` + (stops.map((s, i) => {
+		const isFirst = i === 0;
+		const isLast = i === stops.length - 1;
+		const stopRole = isFirst ? 'stop_entry_only' : isLast ? 'stop_exit_only' : 'stop';
+		const platformRole = isFirst ? 'platform_entry_only' : isLast ? 'platform_exit_only' : 'platform';
+
 		return (
-			(s.stopPosition ? `<member type='node' ref='${s.stopPosition.id}' role='stop' />\n` : '') +
-			`<member type='node' ref='${s.platform.id}' role='platform' />`
+			(s.stopPosition ? `<member type='node' ref='${s.stopPosition.id}' role='${stopRole}' />\n` : '') +
+			`<member type='node' ref='${s.platform.id}' role='${platformRole}' />`
 		);
 	})) + `
 		<tag k='name' v='${routeName}' />
