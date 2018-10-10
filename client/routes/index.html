@@ -6,37 +6,152 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css" rel="stylesheet">
+
+  	<style>
+	body {
+		margin: 20px;
+	}
+	td {
+		padding: 4px;
+		border: 1px solid grey;
+	}
+	tr.invalid {
+		background: #f2dcdc;
+	}
+	tr:hover {
+		background: #d7d7f4;
+	}
+	</style>
 </head>
 <body>
 
 	<h1>Маршруты</h1>
 
-	<h2>Автобусы</h2>
 	<details>
-		<summary>wiki</summary>
-<pre>{{#routes.bus}}|-
-| {{routeNum}} || {{#names}}{{.}}&lt;br/&gt;{{/names}} || {{#_routesMasters}}<span title="{{countMembers}}">&lbrace;&lbrace;Relation|{{.}}|tools=no&rbrace;&rbrace;</span>&lt;br/&gt;{{/_routesMasters}}{{^_routesMasters}}&lbrace;&lbrace;Relation||tools=no&rbrace;&rbrace;{{/_routesMasters}} || {{#_routes}}&lbrace;&lbrace;Relation|{{.}}&rbrace;&rbrace;&lt;br/&gt;{{/_routes}}{{^_routes}}&lbrace;&lbrace;Relation|&rbrace;&rbrace;{{/_routes}} || &lbrace;&lbrace;State Route|r=NA|h=NA&rbrace;&rbrace; ||
-{{/routes.bus}}
-</pre>
-</details>
+		<summary><h2>Автобусы</h2></summary>
+		<table>
+			<thead>
+				<tr>
+					<th>ref</th>
+					<th>Маршруты</th>
+					<th>Маршруты в OSM</th>
+					<th>Мастер-маршрут</th>
+				</tr>
+			</thead>
+			<tbody>
+			{{#routes.bus}}
+				<tr>
+					<td>{{routeNum}}</td>
+					<td>
+						{{#routes}}
+						<div>
+							<a href="/route/{{id}}" target="_blank">{{name}}</a>
+						</div>
+						{{/routes}}
+					</td>
+					<td>
+						{{#_routes}}
+						<div>
+							<a href="https://www.openstreetmap.org/relation/{{id}}" target="_blank">{{name}}</a>
+						</div>
+						{{/_routes}}
+					</td>
+					<td>
+						{{#_routesMasters}}
+						<div>
+							<a href="https://www.openstreetmap.org/relation/{{id}}" target="_blank">{{name}}</a>
+						</div>
+						{{/_routesMasters}}
+					</td>
+				</tr>
+			{{/routes.bus}}
+			</tbody>
+		</table>
+	</details>
 
-	<h2>Трамваи</h2>
 	<details>
-		<summary>wiki</summary>
-<pre>{{#routes.tram}}|-
-| {{routeNum}} || {{routeName}} || {{#_routesMasters}}&lbrace;&lbrace;Relation|{{.}}|tools=no&rbrace;&rbrace;&lt;br/&gt;{{/_routesMasters}}{{^_routesMasters}}&lbrace;&lbrace;Relation||tools=no&rbrace;&rbrace;{{/_routesMasters}} || {{#_routes}}&lbrace;&lbrace;Relation|{{.}}&rbrace;&rbrace;&lt;br/&gt;{{/_routes}}{{^_routes}}&lbrace;&lbrace;Relation|&rbrace;&rbrace;{{/_routes}} || &lbrace;&lbrace;State Route|r=NA|h=NA&rbrace;&rbrace; ||
-{{/routes.tram}}
-</pre>
-</details>
+		<summary><h2>Трамваи</h2></summary>
+		<table>
+			<thead>
+				<tr>
+					<th>ref</th>
+					<th>Маршруты</th>
+					<th>Маршруты в OSM</th>
+					<th>Мастер-маршрут</th>
+				</tr>
+			</thead>
+			<tbody>
+			{{#routes.tram}}
+				<tr>
+					<td>{{routeNum}}</td>
+					<td>
+						{{#routes}}
+						<div>
+							<a href="/route/{{id}}" target="_blank">{{name}}</a>
+						</div>
+						{{/routes}}
+					</td>
+					<td>
+						{{#_routes}}
+						<div>
+							<a href="https://www.openstreetmap.org/relation/{{id}}" target="_blank">{{name}}</a>
+						</div>
+						{{/_routes}}
+					</td>
+					<td>
+						{{#_routesMasters}}
+						<div>
+							<a href="https://www.openstreetmap.org/relation/{{id}}" target="_blank">{{name}}</a>
+						</div>
+						{{/_routesMasters}}
+					</td>
+				</tr>
+			{{/routes.tram}}
+			</tbody>
+		</table>
+	</details>
 
-	<h2>Троллейбусы</h2>
 	<details>
-		<summary>wiki</summary>
-<pre>{{#routes.trol}}|-
-| {{routeNum}} || {{routeName}} || {{#_routesMasters}}&lbrace;&lbrace;Relation|{{.}}|tools=no&rbrace;&rbrace;&lt;br/&gt;{{/_routesMasters}}{{^_routesMasters}}&lbrace;&lbrace;Relation||tools=no&rbrace;&rbrace;{{/_routesMasters}} || {{#_routes}}&lbrace;&lbrace;Relation|{{.}}&rbrace;&rbrace;&lt;br/&gt;{{/_routes}}{{^_routes}}&lbrace;&lbrace;Relation|&rbrace;&rbrace;{{/_routes}} || &lbrace;&lbrace;State Route|r=NA|h=NA&rbrace;&rbrace; ||
-{{/routes.trol}}
-</pre>
-</details>
+		<summary><h2>Троллейбусы</h2></summary>
+		<table>
+			<thead>
+				<tr>
+					<th>ref</th>
+					<th>Маршруты</th>
+					<th>Маршруты в OSM</th>
+					<th>Мастер-маршрут</th>
+				</tr>
+			</thead>
+			<tbody>
+			{{#routes.trol}}
+				<tr>
+					<td>{{routeNum}}</td>
+					<td>
+						{{#routes}}
+						<div>
+							<a href="/route/{{id}}" target="_blank">{{name}}</a>
+						</div>
+						{{/routes}}
+					</td>
+					<td>
+						{{#_routes}}
+						<div>
+							<a href="https://www.openstreetmap.org/relation/{{id}}" target="_blank">{{name}}</a>
+						</div>
+						{{/_routes}}
+					</td>
+					<td>
+						{{#_routesMasters}}
+						<div>
+							<a href="https://www.openstreetmap.org/relation/{{id}}" target="_blank">{{name}}</a>
+						</div>
+						{{/_routesMasters}}
+					</td>
+				</tr>
+			{{/routes.trol}}
+			</tbody>
+		</table>
+	</details>
 
 </body>
 </html>

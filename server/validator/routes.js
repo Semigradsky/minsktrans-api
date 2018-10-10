@@ -2,6 +2,12 @@ import { logger } from './../logs'
 import * as routes from './../routes'
 import allRoutesQuery from './../overpass/AllRoutesQuery';
 
+const transportNames = {
+	bus: 'Автобус',
+	trol: 'Троллейбус',
+	tram: 'Трамвай',
+}
+
 const isValidRoute = (route) => {
 	if (route.transport === 'metro') {
 		return false;
@@ -41,8 +47,8 @@ function attachOSMRelation(allRoutes, route) {
 		return
 	}
 
-	route._routes = allRoutes[transport].routes.filter(x => x.ref === route.routeNum).map(x => x.id)
-	route._routesMasters = allRoutes[transport].masters.filter(x => x.ref === route.routeNum).map(x => x.id);
+	route._routes = allRoutes[transport].routes.filter(x => x.ref === route.routeNum)
+	route._routesMasters = allRoutes[transport].masters.filter(x => x.ref === route.routeNum)
 }
 
 export async function getValidRoutes() {
@@ -59,24 +65,26 @@ export async function getRoutes() {
 
 	const validRoutes = [];
 
-	let names = [];
+	let routes = [];
 	let prevRoute = {};
 	for (let i = 0; i < filteredRoutes.length; i++) {
 		const route = filteredRoutes[i];
 
 		if (route.routeNum === prevRoute.routeNum) {
-			names.push(route.routeName);
+			route.name = `${transportNames[route.transport]} №${route.routeNum} - ${route.routeName}`;
+			routes.push(route);
 		} else {
-			prevRoute.names = names;
-			names = []
+			prevRoute.routes = routes;
+			routes = []
 
 			validRoutes.push(route);
 
 			prevRoute = route;
-			names.push(route.routeName);
+			route.name = `${transportNames[route.transport]} №${route.routeNum} - ${route.routeName}`;
+			routes.push(route);
 		}
 	}
-	prevRoute.names = names;
+	prevRoute.routes = routes;
 
 	let allRoutes = [];
 
