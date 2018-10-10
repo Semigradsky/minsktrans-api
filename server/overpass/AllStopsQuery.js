@@ -1,4 +1,5 @@
 import BaseQuery from './BaseQuery';
+import { isPlatform, isStopPosition } from './filters';
 
 export default new class extends BaseQuery {
 	do() {
@@ -8,6 +9,7 @@ export default new class extends BaseQuery {
 				`(` +
 					`(` +
 						`node[public_transport=platform](53.709307173772835,27.249526977539062,54.07550572224815,27.927932739257812);` +
+						`way[public_transport=platform](53.709307173772835,27.249526977539062,54.07550572224815,27.927932739257812);>;` +
 						`node[public_transport=stop_position](53.709307173772835,27.249526977539062,54.07550572224815,27.927932739257812);` +
 					`);` +
 					`way(bn)[minsk_PT=entrance_pass];` +
@@ -17,12 +19,24 @@ export default new class extends BaseQuery {
 			return this.execute(query, (elements) => {
 				const data = {};
 
-				elements.filter(x => x.tags['public_transport'] === 'platform' && x.tags['ref:minsktrans']).forEach((platform) => {
-					const stopPosition = elements.find(x => x.tags['public_transport'] === 'stop_position' && x.tags['ref:minsktrans'] === platform.tags['ref:minsktrans']);
+				elements.filter(x => isPlatform(x) && x.tags['ref:minsktrans']).forEach((platform) => {
+					const minsktransRef = platform.tags['ref:minsktrans'];
+					const stopPosition = elements.find(x => isStopPosition(x) && x.tags['ref:minsktrans'] === minsktransRef);
 					let entrancePass = null;
 
 					if (stopPosition) {
-						entrancePass = elements.find(x => x.nodes && x.nodes.includes(stopPosition.id) && x.nodes.includes(platform.id));
+						const stopPositionPathes = elements.filter(x => x.nodes && x.nodes.includes(stopPosition.id));
+
+						if (platform.type === 'node') {
+							entrancePass = stopPositionPathes.find(x => x.nodes.includes(platform.id));
+						} else {
+							for (const node of platform.nodes) {
+								entrancePass = stopPositionPathes.find(x => x.nodes.includes(node));
+								if (entrancePass) {
+									break;
+								}
+							}
+						}
 					}
 
 					data[platform.tags['ref:minsktrans']] = {
@@ -37,3 +51,5 @@ export default new class extends BaseQuery {
 		});
 	}
 }
+
+3047241414

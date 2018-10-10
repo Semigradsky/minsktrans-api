@@ -32,7 +32,7 @@ export default new class extends BaseQuery {
 							ref: x.tags.ref,
 							name: x.tags.name,
 							countMembers: (x.members || []).length,
-							stops: x.members.filter(m => m.type === 'node').map(m => m.ref),
+							stops: x.members.map(m => m.ref),
 						})),
 					};
 				});

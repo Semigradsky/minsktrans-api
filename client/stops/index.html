@@ -93,7 +93,7 @@
 					<td>
 						<div>Платформа:&nbsp;
 							{{#platform}}
-								<a href="https://www.openstreetmap.org/node/{{platform.id}}" target="_blank">{{platform.tags.name:ru}}</a>
+								<a href="https://www.openstreetmap.org/{{platform.type}}/{{platform.id}}" target="_blank">{{platform.tags.name:ru}}</a>
 							{{/platform}}
 							{{^platform}}
 								None
@@ -101,7 +101,7 @@
 						</div>
 						<div>Точка остановки:&nbsp;
 							{{#stopPosition}}
-								<a href="https://www.openstreetmap.org/node/{{stopPosition.id}}" target="_blank">{{stopPosition.tags.name:ru}}</a>
+								<a href="https://www.openstreetmap.org/{{stopPosition.type}}/{{stopPosition.id}}" target="_blank">{{stopPosition.tags.name:ru}}</a>
 							{{/stopPosition}}
 							{{^stopPosition}}
 								None
@@ -109,7 +109,7 @@
 						</div>
 						<div>Перемычка:&nbsp;
 							{{#entrancePass}}
-								<a href="https://www.openstreetmap.org/way/{{entrancePass.id}}" target="_blank">{{entrancePass.id}}</a>
+								<a href="https://www.openstreetmap.org/{{entrancePass.type}}/{{entrancePass.id}}" target="_blank">{{entrancePass.id}}</a>
 							{{/entrancePass}}
 							{{^entrancePass}}
 								None
