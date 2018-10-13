@@ -63,7 +63,7 @@ export default async function () {
 				osmRoutes = [].concat(
 					...['bus', 'tram', 'trolleybus'].map(tr =>
 						allOsmRoutes[tr].routes.filter(r =>
-							r.stops.includes(osmStop.platform.id)
+							r.stops.some(s => s.id === osmStop.platform.id)
 						).map(r => ({
 							id: r.id,
 							ref: r.ref,

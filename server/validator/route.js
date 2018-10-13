@@ -1,7 +1,7 @@
 import { logger } from './../logs'
 import * as stops from './../stops'
 import allStopsQuery from './../overpass/AllStopsQuery';
-import routeQuery from './../overpass/RouteQuery';
+import allRouteQuery from './../overpass/AllRoutesQuery';
 import { getValidRoutes } from './routes';
 
 const transportNames = {
@@ -33,16 +33,13 @@ export default async function routeValidator({ routeId }) {
 	data.route = route;
 	data.name = `${transportNames[route.transport]} №${route.routeNum} - ${route.routeName}`;
 
-	data.osmRoutes = (await routeQuery.do(route.routeNum, transport)).map(r => ({
-		relation: r.relation,
-		stops: r.stops.filter(s => s.tags.highway === 'bus_stop' || s.tags.railway === 'tram_stop')
-	}));
+	data.osmRoutes = (await allRouteQuery.do())[transport].routes.filter(r => r.ref === route.routeNum);
 
 	function isEqualRouteNames(a, b) {
 		return a.replace(/[^\u0400-\u04FF]/g, '').toLowerCase() === b.replace(/[^\u0400-\u04FF]/g, '').toLowerCase();
 	}
 
-	const filteredOsmRoutes = data.osmRoutes.filter(r => isEqualRouteNames(r.relation.tags.name, data.name));
+	const filteredOsmRoutes = data.osmRoutes.filter(r => isEqualRouteNames(r.tags.name, data.name));
 
 	if (filteredOsmRoutes.length) {
 		data.osmRoutes = filteredOsmRoutes;
@@ -156,7 +153,7 @@ export default async function routeValidator({ routeId }) {
 	}
 
 	data.osmRoutes = data.osmRoutes.map(r => ({
-		relation: r.relation,
+		relation: r,
 		stops: mapStops(r.stops, data.stops),
 	}));
 

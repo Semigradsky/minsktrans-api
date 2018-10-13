@@ -4,6 +4,21 @@ import { logger } from './logs'
 import os from 'os'
 import config from './config';
 
+export async function getMTime (fileName) {
+	const fsName = path.resolve(os.tmpdir(), fileName)
+	const fstat = await fs.stat(fsName)
+	return +fstat.mtime;
+}
+
+export async function notExpired (fileName, cacheTime) {
+	try {
+		const mtime = await getMTime(fileName)
+		return mtime + cacheTime > Date.now();
+	} catch (err) {
+		return false;
+	}
+}
+
 export async function getFileFromCache (fileName, cacheTime = config.cache.default) {
 	const fsName = path.resolve(os.tmpdir(), fileName)
 	const fstat = await fs.stat(fsName)

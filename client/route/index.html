@@ -13,7 +13,7 @@
 	  }
 	  td {
 		padding: 4px;
-    	border: 1px solid grey;
+		border: 1px solid grey;
 	  }
 	  tr.invalid {
 		background: #f2dcdc;
@@ -46,10 +46,31 @@
 	  .osm-stops .action {
 		  display: inline-block;
 	  }
+
+	  .no-js-show {
+		display: none;
+	  }
   </style>
+	<noscript>
+		<style>
+			.loading-hide {
+				display: none;
+			}
+			.loading-show {
+				display: block;
+			}
+			.no-js-show {
+				display: block;
+			}
+			.no-js-hide {
+				display: none;
+			}
+		</style>
+	</noscript>
 </head>
 <body>
-	<a href="/stops">&lt;&lt;&lt; Все остановки</a>
+	<p><a href="/stops">&lt;&lt;&lt; Все остановки</a></p>
+	<p><a href="/routes">&lt;&lt;&lt; Все маршруты</a></p>
 	<h1>{{name}}</h1>
 	<table>
 		<thead>
@@ -65,7 +86,8 @@
 				<td>{{stop.id}}</td>
 				<td>
 					<a href="{{osmLink}}" target="_blank">{{stop.name}}</a>
-					<a href="{{josmLink}}" class="edit-link" data-edit="josm" target="_blank">Edit</a>
+					<a href="{{josmLink}}" class="edit-link no-js-show" data-edit="josm" target="_blank">Edit</a>
+					<button href="{{josmLink}}" class="edit-link no-js-hide" data-edit="josm">Edit</button>
 				</td>
 				<td>
 					<div>Платформа:&nbsp;
@@ -106,7 +128,8 @@
 	{{#osmRoutes}}
 		<li>
 			<p><a href="https://www.openstreetmap.org/relation/{{relation.id}}" target="_blank">{{relation.tags.name}}</a></p>
-			<p><a href="http://127.0.0.1:8111/load_object?new_layer=false&objects=r{{relation.id}}" data-edit="josm" target="_blank">Редактировать в ОСМ</a></p>
+			<p class="no-js-show"><a href="http://127.0.0.1:8111/load_object?new_layer=false&objects=r{{relation.id}}" data-edit="josm" target="_blank">Редактировать в ОСМ</a></p>
+			<p class="no-js-hide"><button href="http://127.0.0.1:8111/load_object?new_layer=false&objects=r{{relation.id}}" data-edit="josm">Редактировать в ОСМ</button></p>
 			<ul class="osm-stops">
 				{{#stops}}
 				<li class="{{#action}}has-action{{/action}}" title="{{title}}">
@@ -130,7 +153,8 @@
 	{{/noMappedStops.length}}
 	{{^noMappedStops}}
 		<p>Все остановки маршрута имеют аналоги в ОСМ.</p>
-		<p><a href="{{generateOSMLink}}" data-edit="josm" target="_blank">Сгенерировать маршрут</a></p>
+		<p class="no-js-show"><a href="{{generateOSMLink}}" data-edit="josm" target="_blank">Сгенерировать маршрут</a></p>
+		<p class="no-js-hide"><button href="{{generateOSMLink}}" data-edit="josm" target="_blank">Сгенерировать маршрут</button></p>
 	{{/noMappedStops}}
 </body>
 

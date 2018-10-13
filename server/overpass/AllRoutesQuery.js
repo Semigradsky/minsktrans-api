@@ -12,6 +12,8 @@ export default new class extends BaseQuery {
 						`(` +
 							`rel[route_master=${transport}](br.sta);` +
 							`.sta;` +
+							`node(r)[public_transport=platform];` +
+							`way(r)[public_transport=platform];` +
 						`);out;`
 					)).join('')
 			);
@@ -25,14 +27,16 @@ export default new class extends BaseQuery {
 							id: x.id,
 							ref: x.tags.ref,
 							name: x.tags.name,
-							countMembers: (x.members || []).length,
+							tags: x.tags,
 						})),
 						routes: elements.filter(x => x.tags.type === 'route' && x.tags['route'] === transport).map(x => ({
 							id: x.id,
 							ref: x.tags.ref,
 							name: x.tags.name,
-							countMembers: (x.members || []).length,
-							stops: x.members.map(m => m.ref),
+							stops: x.members.map(m =>
+								elements.find(e => e.id === m.ref)
+							).filter(x => !!x),
+							tags: x.tags,
 						})),
 					};
 				});

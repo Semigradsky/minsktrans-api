@@ -16,7 +16,7 @@
 	  }
 	  td {
 		padding: 4px;
-    	border: 1px solid grey;
+		border: 1px solid grey;
 	  }
 	  tbody tr {
 		  display: none;
@@ -49,6 +49,10 @@
 	  .loaded .loading-show {
 		display: block;
 	  }
+
+	  .no-js-show {
+		display: none;
+	  }
   </style>
   <noscript>
 	  <style>
@@ -58,10 +62,17 @@
 		  .loading-show {
 			display: block;
 		  }
+		  .no-js-show {
+			display: block;
+		  }
+		  .no-js-hide {
+			display: none;
+		  }
 	  </style>
   </noscript>
 </head>
 <body>
+	<p><a href="/routes">&lt;&lt;&lt; Все маршруты</a></p>
 	<p>Всего остановок: {{stops.length}}</p>
 	<p>Из них не полностью замапленых: {{countInvalidStops}} ({{percentInvalidStops}}%)</p>
 
@@ -88,7 +99,8 @@
 					<td>{{stop.id}}</td>
 					<td>
 						<a href="{{osmLink}}" target="_blank">{{stop.name}}</a>
-						<a href="{{josmLink}}" class="edit-link" data-edit="josm" target="_blank">Edit</a>
+						<a href="{{josmLink}}" class="edit-link no-js-show" data-edit="josm" target="_blank">Edit</a>
+						<button href="{{josmLink}}" class="edit-link no-js-hide" data-edit="josm">Edit</button>
 					</td>
 					<td>
 						<div>Платформа:&nbsp;

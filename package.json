@@ -29,6 +29,7 @@
     ]
   },
   "dependencies": {
+    "etag": "^1.8.1",
     "fs-extra": "^7.0.0",
     "micro": "^9.3.3",
     "micro-core": "^0.4.0",

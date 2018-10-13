@@ -2,8 +2,12 @@ import Mustache from 'mustache';
 import { send } from 'micro'
 import { router, get } from 'microrouter'
 import fs from 'fs-extra'
+import etag from 'etag';
 
 const path = require('path');
+
+import { getFileFromCache, saveFileToCache, getMTime, notExpired } from './cache'
+import config from './config';
 
 import { logger } from './logs'
 import { getRawFile } from './raw'
@@ -16,58 +20,72 @@ import routesValidator from './validator/routes';
 import routeValidator from './validator/route';
 import stopsValidator from './validator/stops';
 
-async function serveFile (req, res, fileGetter, contentType = 'text/plain') {
-	try {
-		const file = await fileGetter()
-		res.setHeader('Content-Type', `${contentType}; charset=utf-8`)
+async function serveWithCache(req, res, cacheKey, dataAsyncGetter, contentType = 'text/plain', cacheTime = config.cache.default) {
+	if (await notExpired(cacheKey, cacheTime)) {
+		const e = etag(String(await getMTime(cacheKey)));
+		res.setHeader('ETag', e);
 
-		let result = ''
-		if (contentType === 'application/json') {
-			result = JSON.stringify(file, null, 4);
-		} else {
-			result = file.toString()
+		if (req.headers['if-none-match'] === e) {
+			send(res, 304);
+			return;
 		}
+	}
 
-		send(res, 200, result)
-	} catch (err) {
-		logger.error(err.message)
-		send(res, 404, 'Not found')
+	res.setHeader('Content-Type', `${contentType}; charset=utf-8`);
+
+	try {
+		const data = await getFileFromCache(cacheKey, cacheTime);
+		res.setHeader('ETag', etag(String(await getMTime(cacheKey))));
+		res.end(data);
+	} catch (e) {
+		try {
+			const data = await dataAsyncGetter(req.params);
+			saveFileToCache(cacheKey, data);
+			res.setHeader('ETag', etag(String(await getMTime(cacheKey))));
+			res.end(data);
+		} catch (err) {
+			logger.error(err)
+			send(res, 500, 'Server error')
+		}
 	}
 }
 
-async function serveHTML (req, res, dataAsyncGetter, fileName) {
-	const document = path.join(__dirname, '/../client', fileName);
+async function serveFile (req, res, fileGetter, cacheKey, contentType = 'text/plain') {
+	return serveWithCache(req, res, cacheKey, async () => {
+		return (await fileGetter()).toString();
+	}, contentType);
+}
 
-	try {
+async function serveHTML (req, res, dataAsyncGetter, fileName, cacheKey) {
+	return serveWithCache(req, res, cacheKey, async (params) => {
+		const document = path.join(__dirname, '/../client', fileName);
 		const template = await fs.readFile(document, 'utf8');
-		const data = await dataAsyncGetter(req.params);
-		const html = Mustache.render(template, data);
-		res.end(html);
-	} catch (err) {
-		logger.error(err)
-		send(res, 500, 'Server error')
-	}
+		const data = await dataAsyncGetter(params);
+		return Mustache.render(template, data);
+	}, 'text/html', config.cache.overpass.default);
 }
 
 export default router(
-	get('/routes', (req, res) => serveHTML(req, res, routesValidator, '/routes/index.html'), 'text/plain'),
-	get('/route/:routeId', (req, res) => serveHTML(req, res, routeValidator, '/route/index.html'), 'text/plain'),
-	get('/stops', (req, res) => serveHTML(req, res, stopsValidator, '/stops/index.html'), 'text/plain'),
+	get('/routes', (req, res) => serveHTML(req, res, routesValidator, '/routes/index.html', 'routes.html'), 'text/plain'),
+	get('/route/:routeId', (req, res) => serveHTML(req, res, routeValidator, '/route/index.html', `route-${req.params.routeId}.html`), 'text/plain'),
+	get('/stops', (req, res) => serveHTML(req, res, stopsValidator, '/stops/index.html', 'stops.html'), 'text/plain'),
 
-	get('/:file.txt', (req, res) => serveFile(req, res, () => getRawFile(`${req.params.file}.txt`), 'text/plain')),
+	get('/:file.txt', (req, res) => serveFile(req, res, () => getRawFile(`${req.params.file}.txt`), `${req.params.file}.txt`, 'text/plain')),
 
-	get('/routes.json', (req, res) => serveFile(req, res, () => routes.getJSON(), 'application/json')),
-	get('/routes.csv', (req, res) => serveFile(req, res, () => routes.getCSV(), 'text/csv')),
+	get('/routes.json', (req, res) => serveFile(req, res, () => routes.getJSON(), 'routes.json', 'application/json')),
+	get('/routes.csv', (req, res) => serveFile(req, res, () => routes.getCSV(), 'routes.csv', 'text/csv')),
 
-	get('/stops.json', (req, res) => serveFile(req, res, () => stops.getJSON(), 'application/json')),
-	get('/stops.csv', (req, res) => serveFile(req, res, () => stops.getCSV(), 'text/csv')),
+	get('/stops.json', (req, res) => serveFile(req, res, () => stops.getJSON(), 'stops.json', 'application/json')),
+	get('/stops.csv', (req, res) => serveFile(req, res, () => stops.getCSV(), 'stops.csv', 'text/csv')),
 
-	get('/stops.kml', (req, res) => serveFile(req, res, () => getStopsKML(), 'application/vnd.google-earth.kml+xml')),
+	get('/stops.kml', (req, res) => serveFile(req, res, () => getStopsKML(), 'stops.kml', 'application/vnd.google-earth.kml+xml')),
 
-	get('/gtfs/agency.txt', (req, res) => serveFile(req, res, () => gtfs.getAgency(), 'text/plain')),
-	get('/gtfs/stops.txt', (req, res) => serveFile(req, res, () => gtfs.getStops(), 'text/plain')),
-	get('/gtfs/routes.txt', (req, res) => serveFile(req, res, () => gtfs.getRoutes(), 'text/plain')),
-	get('/gtfs/trips.txt', (req, res) => serveFile(req, res, () => gtfs.getTrips(), 'text/plain')),
-	get('/gtfs/stop_times.txt', (req, res) => serveFile(req, res, () => gtfs.getStopTimes(), 'text/plain')),
-	get('/gtfs/calendar.txt', (req, res) => serveFile(req, res, () => gtfs.getCalendar(), 'text/plain')),
+	get('/gtfs/agency.txt', (req, res) => serveFile(req, res, () => gtfs.getAgency(), 'agency.txt', 'text/plain')),
+	get('/gtfs/stops.txt', (req, res) => serveFile(req, res, () => gtfs.getStops(), 'stops.txt', 'text/plain')),
+	get('/gtfs/routes.txt', (req, res) => serveFile(req, res, () => gtfs.getRoutes(), 'routes.txt', 'text/plain')),
+	get('/gtfs/trips.txt', (req, res) => serveFile(req, res, () => gtfs.getTrips(), 'trips.txt', 'text/plain')),
+	get('/gtfs/stop_times.txt', (req, res) => serveFile(req, res, () => gtfs.getStopTimes(), 'stop_times.txt', 'text/plain')),
+	get('/gtfs/calendar.txt', (req, res) => serveFile(req, res, () => gtfs.getCalendar(), 'calendar.txt', 'text/plain')),
+
+	get('*', (req, res) => send(res, 404, 'Not found')),
 )
