@@ -1,43 +1,11 @@
 import { logger } from './../logs'
-import * as routes from './../routes'
+import { getValid } from './../routes'
 import allRoutesQuery from './../overpass/AllRoutesQuery';
 
 const transportNames = {
 	bus: 'Автобус',
 	trol: 'Троллейбус',
 	tram: 'Трамвай',
-}
-
-const isValidRoute = (route) => {
-	if (route.transport === 'metro') {
-		return false;
-	}
-
-	if (!['A>B', 'B>A'].includes(route.routeType)) {
-		return false;
-	}
-
-	if (route.stops.length <= 2) {
-		return false;
-	}
-
-	if (!route.validityPeriods) {
-		return true;
-	}
-
-	const now = Date.now() / (1000 * 60 * 60 * 24);
-	const from = route.validityPeriods.from;
-	const to = route.validityPeriods.to;
-
-	if (from > now) {
-		return false; // start in future
-	}
-
-	if (to && to < now) {
-		return false; // ended
-	}
-
-	return true;
 }
 
 function attachOSMRelation(allRoutes, route) {
@@ -51,17 +19,8 @@ function attachOSMRelation(allRoutes, route) {
 	route._routesMasters = allRoutes[transport].masters.filter(x => x.ref === route.routeNum)
 }
 
-export async function getValidRoutes() {
-	const r = await routes.getJSON();
-
-	return r.filter(isValidRoute).filter((route, pos, validRoutes) => {
-		const stopsStr = route.stops.join(',');
-		return validRoutes.findIndex((r) => stopsStr === r.stops.join(',')) === pos;
-	});
-}
-
 export async function getRoutes() {
-	const filteredRoutes = await getValidRoutes();
+	const filteredRoutes = JSON.parse(await getValid());
 
 	const validRoutes = [];
 

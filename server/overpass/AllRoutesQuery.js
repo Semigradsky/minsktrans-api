@@ -12,8 +12,8 @@ export default new class extends BaseQuery {
 						`(` +
 							`rel[route_master=${transport}](br.sta);` +
 							`.sta;` +
-							`node(r)[public_transport=platform];` +
-							`way(r)[public_transport=platform];` +
+							`node(r.sta)[public_transport=platform];` +
+							`way(r.sta)[public_transport=platform];` +
 						`);out;`
 					)).join('')
 			);

@@ -40,7 +40,7 @@ async function serveWithCache(req, res, cacheKey, dataAsyncGetter, contentType =
 	} catch (e) {
 		try {
 			const data = await dataAsyncGetter(req.params);
-			saveFileToCache(cacheKey, data);
+			await saveFileToCache(cacheKey, data);
 			res.setHeader('ETag', etag(String(await getMTime(cacheKey))));
 			res.end(data);
 		} catch (err) {
@@ -73,9 +73,11 @@ export default router(
 	get('/:file.txt', (req, res) => serveFile(req, res, () => getRawFile(`${req.params.file}.txt`), `${req.params.file}.txt`, 'text/plain')),
 
 	get('/routes.json', (req, res) => serveFile(req, res, () => routes.getJSON(), 'routes.json', 'application/json')),
+	get('/routes/valid.json', (req, res) => serveFile(req, res, () => routes.getValid(), 'routes-valid.json', 'application/json')),
 	get('/routes.csv', (req, res) => serveFile(req, res, () => routes.getCSV(), 'routes.csv', 'text/csv')),
 
 	get('/stops.json', (req, res) => serveFile(req, res, () => stops.getJSON(), 'stops.json', 'application/json')),
+	get('/stops/valid.json', (req, res) => serveFile(req, res, () => stops.getValid(), 'stops-valid.json', 'application/json')),
 	get('/stops.csv', (req, res) => serveFile(req, res, () => stops.getCSV(), 'stops.csv', 'text/csv')),
 
 	get('/stops.kml', (req, res) => serveFile(req, res, () => getStopsKML(), 'stops.kml', 'application/vnd.google-earth.kml+xml')),

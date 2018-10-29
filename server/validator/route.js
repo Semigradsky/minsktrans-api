@@ -2,7 +2,7 @@ import { logger } from './../logs'
 import * as stops from './../stops'
 import allStopsQuery from './../overpass/AllStopsQuery';
 import allRouteQuery from './../overpass/AllRoutesQuery';
-import { getValidRoutes } from './routes';
+import { getValid as getValidRoutes } from './../routes';
 
 const transportNames = {
 	bus: 'Автобус',
@@ -13,12 +13,12 @@ const transportNames = {
 export default async function routeValidator({ routeId }) {
 	const data = {};
 
-	const route = (await getValidRoutes()).find(r => r.id === routeId);
+	const route = JSON.parse(await getValidRoutes()).find(r => r.id === routeId);
 	if (!route) {
 		return null;
 	}
 
-	const allStops = await stops.getJSON();
+	const allStops = JSON.parse(await stops.getJSON());
 
 	let osmStops = {};
 
@@ -177,7 +177,7 @@ function generateOSMLink(routeName, transport, ref, stops) {
 
 		return (
 			(s.stopPosition ? `<member type='node' ref='${s.stopPosition.id}' role='${stopRole}' />\n` : '') +
-			`<member type='node' ref='${s.platform.id}' role='${platformRole}' />`
+			`<member type='${s.platform.type}' ref='${s.platform.id}' role='${platformRole}' />`
 		);
 	})) + `
 		<tag k='name' v='${routeName}' />

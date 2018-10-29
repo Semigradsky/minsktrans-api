@@ -1,6 +1,6 @@
 import { logger } from './../logs'
-import * as stops from './../stops'
-import { getValidRoutes } from './routes'
+import { getValid as getValidStops } from './../stops'
+import { getValid as getValidRoutes } from './../routes'
 import allStopsQuery from './../overpass/AllStopsQuery';
 import allRoutesQuery from './../overpass/AllRoutesQuery';
 
@@ -20,17 +20,6 @@ const sortFunc = (name) => (a, b) => {
 	return natural_compare(a[name] || '', b[name] || '');
 }
 
-export async function getValidStops(validRoutes) {
-	const s = await stops.getJSON();
-
-	const validStops = [...new Set(validRoutes.reduce((acc, route) => {
-		acc = [...acc, ...route.stops];
-		return acc;
-	}, []))];
-
-	return s.filter((stop) => validStops.includes(stop.id));
-}
-
 export default async function () {
 	const data = { stops: [] };
 
@@ -42,8 +31,8 @@ export default async function () {
 		logger.error(err);
 	}
 
-	const validRoutes = await getValidRoutes();
-	const validStops = await getValidStops(validRoutes);
+	const validRoutes = JSON.parse(await getValidRoutes());
+	const validStops = JSON.parse(await getValidStops());
 	const allOsmRoutes = await allRoutesQuery.do();
 
 	for (const stop of validStops) {
