@@ -1,5 +1,6 @@
 import { logger } from './../logs'
 import { getValid } from './../routes'
+import allStopsQuery from './../overpass/AllStopsQuery';
 import allRoutesQuery from './../overpass/AllRoutesQuery';
 
 const transportNames = {
@@ -18,6 +19,28 @@ function attachOSMRelation(allRoutes, route) {
 	route._routes = allRoutes[transport].routes.filter(x => x.ref === route.routeNum)
 	route._routesMasters = allRoutes[transport].masters.filter(x => x.ref === route.routeNum)
 }
+
+function validateRoutes(route, osmStops) {
+	if (!route._routes || !route._routesMasters) {
+		return false;
+	}
+
+	if (route._routes.length !== 2 || route._routesMasters.length !== 1) {
+		return false;
+	}
+
+	return route._routes.some(r => {
+		if (route.stops.length !== r.stops.length) {
+			return false;
+		}
+
+		return route.stops.every((s, pos) => {
+			const osmStop = osmStops[s] && osmStops[s].platform && osmStops[s].platform.id;
+			return osmStop && osmStop === r.stops[pos].id;
+		});
+	});
+}
+
 
 export async function getRoutes() {
 	const filteredRoutes = JSON.parse(await getValid());
@@ -46,14 +69,19 @@ export async function getRoutes() {
 	prevRoute.routes = routes;
 
 	let allRoutes = [];
+	let allStops = [];
 
 	try {
 		allRoutes = await allRoutesQuery.do();
+		allStops = await allStopsQuery.do();
 	} catch (err) {
 		logger.error(err);
 	}
 
-	validRoutes.map(route => attachOSMRelation(allRoutes, route))
+	for (const route of validRoutes) {
+		attachOSMRelation(allRoutes, route);
+		route.isValid = validateRoutes(route, allStops);
+	}
 
 	return validRoutes.reduce((acc, route) => {
 		acc[route.transport] = [...acc[route.transport], route];

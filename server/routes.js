@@ -50,6 +50,8 @@ const isValidStop = (stopId, pos, stops) => {
 		'16007', // Красный Бор(посадки нет)
 		'133375', // Национальный аэропорт "Минск" (высадка пассажиров)
 		'15384', // Степянка (высадка пассажиров)
+		'69517', // ДС Запад-3 (посадки нет)
+		'72620', // ДС Запад-3 (высадка пассажиров)
 	].includes(stopId)) {
 		return false;
 	}
@@ -93,6 +95,18 @@ function formatValidityPeriods(validityPeriods) {
 	};
 }
 
+const formatId = (id) => {
+	const synonims = {
+		'133119': '16060'
+	};
+
+	if (id in synonims) {
+		return synonims[id];
+	}
+
+	return id;
+}
+
 async function generateJSON () {
 	const file = await getRawFile('routes.txt')
 	const lines = file.toString().trim().split('\n').slice(1)
@@ -117,7 +131,7 @@ async function generateJSON () {
 			routeType,
 			routeName,
 			weekdays: weekdays === '' ? undefined : weekdays,
-			stops: stops ? stops.split(',') : [],
+			stops: stops ? stops.split(',').map(formatId) : [],
 			datestart: datestart || prevDateStart
 		})
 
@@ -136,7 +150,7 @@ export async function getValid() {
 	} catch (err) {
 		let validRoutes = JSON.parse(await getJSON()).filter(isValidRoute).filter((route, pos, validRoutes) => {
 			const stopsStr = route.stops.join(',');
-			return validRoutes.findIndex((r) => stopsStr === r.stops.join(',')) === pos;
+			return validRoutes.findIndex((r) => stopsStr === r.stops.join(',') && r.routeNum === route.routeNum) === pos;
 		});
 
 		validRoutes.forEach((route) => {

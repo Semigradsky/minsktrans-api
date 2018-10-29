@@ -50,25 +50,25 @@ async function serveWithCache(req, res, cacheKey, dataAsyncGetter, contentType =
 	}
 }
 
-async function serveFile (req, res, fileGetter, cacheKey, contentType = 'text/plain') {
+async function serveFile (req, res, fileGetter, cacheKey, contentType = 'text/plain', cacheTime = config.cache.overpass.default) {
 	return serveWithCache(req, res, cacheKey, async () => {
 		return (await fileGetter()).toString();
-	}, contentType);
+	}, contentType, cacheTime);
 }
 
-async function serveHTML (req, res, dataAsyncGetter, fileName, cacheKey) {
+async function serveHTML (req, res, dataAsyncGetter, fileName, cacheKey, cacheTime = config.cache.overpass.default) {
 	return serveWithCache(req, res, cacheKey, async (params) => {
 		const document = path.join(__dirname, '/../client', fileName);
 		const template = await fs.readFile(document, 'utf8');
 		const data = await dataAsyncGetter(params);
 		return Mustache.render(template, data);
-	}, 'text/html', config.cache.overpass.default);
+	}, 'text/html', cacheTime);
 }
 
 export default router(
-	get('/routes', (req, res) => serveHTML(req, res, routesValidator, '/routes/index.html', 'routes.html'), 'text/plain'),
-	get('/route/:routeId', (req, res) => serveHTML(req, res, routeValidator, '/route/index.html', `route-${req.params.routeId}.html`), 'text/plain'),
-	get('/stops', (req, res) => serveHTML(req, res, stopsValidator, '/stops/index.html', 'stops.html'), 'text/plain'),
+	get('/routes', (req, res) => serveHTML(req, res, routesValidator, '/routes/index.html', 'routes.html', 1)),
+	get('/route/:routeId', (req, res) => serveHTML(req, res, routeValidator, '/route/index.html', `route-${req.params.routeId}.html`)),
+	get('/stops', (req, res) => serveHTML(req, res, stopsValidator, '/stops/index.html', 'stops.html')),
 
 	get('/:file.txt', (req, res) => serveFile(req, res, () => getRawFile(`${req.params.file}.txt`), `${req.params.file}.txt`, 'text/plain')),
 

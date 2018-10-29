@@ -15,6 +15,9 @@
 		padding: 4px;
 		border: 1px solid grey;
 	}
+	tr.valid {
+		background: #e0ffe0;
+	}
 	tr.invalid {
 		background: #f2dcdc;
 	}
@@ -40,7 +43,7 @@
 			</thead>
 			<tbody>
 			{{#routes.bus}}
-				<tr>
+				<tr {{#isValid}}class="valid"{{/isValid}}>
 					<td>{{routeNum}}</td>
 					<td>
 						{{#routes}}
@@ -82,7 +85,7 @@
 			</thead>
 			<tbody>
 			{{#routes.tram}}
-				<tr>
+				<tr {{#isValid}}class="valid"{{/isValid}}>
 					<td>{{routeNum}}</td>
 					<td>
 						{{#routes}}
@@ -124,7 +127,7 @@
 			</thead>
 			<tbody>
 			{{#routes.trol}}
-				<tr>
+				<tr {{#isValid}}class="valid"{{/isValid}}>
 					<td>{{routeNum}}</td>
 					<td>
 						{{#routes}}

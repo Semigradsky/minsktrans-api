@@ -18,6 +18,18 @@ async function generateCSV () {
 	return result
 }
 
+const formatId = (id) => {
+	const synonims = {
+		'133119': '16060'
+	};
+
+	if (id in synonims) {
+		return synonims[id];
+	}
+
+	return id;
+}
+
 async function generateJSON () {
 	const file = await getRawFile('stops.txt')
 	const lines = file.toString().trim().split('\n').slice(1)
@@ -37,7 +49,7 @@ async function generateJSON () {
 		prevName = normalizedName
 
 		places.push({
-			id,
+			id: formatId(id),
 			name: normalizedName,
 			lng: lng / 100000,
 			lat: lat / 100000,
