@@ -46,7 +46,7 @@ export default async function routeValidator({ routeId }) {
 	}
 
 	data.stops = route.stops.map(s => allStops.find(ss => ss.id === s)).map(stop => {
-		const osmStop = osmStops[stop.id];
+		const osmStop = (osmStops[stop.id] || [])[0];
 
 		let platform = null;
 		let stopPosition = null;
@@ -62,10 +62,15 @@ export default async function routeValidator({ routeId }) {
 
 		return {
 			stop,
+			names: {
+				platform: platform && (platform.tags['name:ru'] || platform.tags.name),
+				stopPosition: stopPosition && (stopPosition.tags['name:ru'] || stopPosition.tags.name),
+			},
 			platform,
 			stopPosition,
 			entrancePass,
-			invalid: !platform || !stopPosition || !entrancePass,
+			invalid: !platform || !stopPosition,
+			hasntPass: !entrancePass,
 			osmLink: `https://www.openstreetmap.org/?mlat=${stop.lat}&mlon=${stop.lng}#map=19/${stop.lat + 0.0001}/${stop.lng + 0.0001}`,
 			josmLink: `http://127.0.0.1:8111/load_and_zoom?left=${stop.lng - 0.001}&right=${stop.lng + 0.001}&top=${stop.lat + 0.0006}&bottom=${stop.lat - 0.0006}`,
 			checkDate,

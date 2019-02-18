@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>OT Беларуси - валидатор</title>
+  <title>{{name}}</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link href="https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css" rel="stylesheet">
@@ -14,6 +14,9 @@
 	  td {
 		padding: 4px;
 		border: 1px solid grey;
+	  }
+	  tr.hasntPass {
+		background: #eef2dc;
 	  }
 	  tr.invalid {
 		background: #f2dcdc;
@@ -82,7 +85,7 @@
 		</thead>
 		<tbody>
 			{{#stops}}
-			<tr {{#invalid}}class="invalid"{{/invalid}}>
+			<tr class="{{#invalid}}invalid{{/invalid}} {{#hasntPass}}hasntPass{{/hasntPass}}">
 				<td>{{stop.id}}</td>
 				<td>
 					<a href="{{osmLink}}" target="_blank">{{stop.name}}</a>
@@ -92,7 +95,7 @@
 				<td>
 					<div>Платформа:&nbsp;
 						{{#platform}}
-							<a href="https://www.openstreetmap.org/{{platform.type}}/{{platform.id}}" target="_blank">{{platform.tags.name:ru}}</a>
+							<a href="https://www.openstreetmap.org/{{platform.type}}/{{platform.id}}" target="_blank">{{names.platform}}</a>
 						{{/platform}}
 						{{^platform}}
 							None
@@ -100,7 +103,7 @@
 					</div>
 					<div>Точка остановки:&nbsp;
 						{{#stopPosition}}
-							<a href="https://www.openstreetmap.org/{{stopPosition.type}}/{{stopPosition.id}}" target="_blank">{{stopPosition.tags.name:ru}}</a>
+							<a href="https://www.openstreetmap.org/{{stopPosition.type}}/{{stopPosition.id}}" target="_blank">{{names.stopPosition}}</a>
 						{{/stopPosition}}
 						{{^stopPosition}}
 							None

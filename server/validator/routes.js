@@ -25,7 +25,7 @@ function validateRoutes(route, osmStops) {
 		return false;
 	}
 
-	if (route._routes.length !== 2 || route._routesMasters.length !== 1) {
+	if (route._routes.length === 0 || route._routesMasters.length !== 1) {
 		return false;
 	}
 
@@ -34,9 +34,13 @@ function validateRoutes(route, osmStops) {
 			return false;
 		}
 
-		return route.stops.every((s, pos) => {
-			const osmStop = osmStops[s] && osmStops[s].platform && osmStops[s].platform.id;
-			return osmStop && osmStop === r.stops[pos].id;
+		return route.stops.every((refMinskTrans, pos) => {
+			if (!osmStops[refMinskTrans]) {
+				return false;
+			}
+
+			const platformIds = osmStops[refMinskTrans].map(s => (s.platform && s.platform.id));
+			return platformIds.includes(r.stops[pos].id);
 		});
 	});
 }

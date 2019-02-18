@@ -39,11 +39,13 @@ export default new class extends BaseQuery {
 						}
 					}
 
-					data[platform.tags['ref:minsktrans']] = {
+					data[platform.tags['ref:minsktrans']] = data[platform.tags['ref:minsktrans']] || [];
+
+					data[platform.tags['ref:minsktrans']].push({
 						platform,
 						stopPosition,
 						entrancePass,
-					};
+					});
 				});
 
 				return data;

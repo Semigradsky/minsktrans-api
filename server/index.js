@@ -66,9 +66,9 @@ async function serveHTML (req, res, dataAsyncGetter, fileName, cacheKey, cacheTi
 }
 
 export default router(
-	get('/routes', (req, res) => serveHTML(req, res, routesValidator, '/routes/index.html', 'routes.html', 1)),
+	get('/routes', (req, res) => serveHTML(req, res, routesValidator, '/routes/index.html', 'routes.html')),
 	get('/route/:routeId', (req, res) => serveHTML(req, res, routeValidator, '/route/index.html', `route-${req.params.routeId}.html`)),
-	get('/stops', (req, res) => serveHTML(req, res, stopsValidator, '/stops/index.html', 'stops.html')),
+	get('/stops', (req, res) => serveHTML(req, res, stopsValidator, '/stops/index.html', 'stops.html', 1)),
 
 	get('/:file.txt', (req, res) => serveFile(req, res, () => getRawFile(`${req.params.file}.txt`), `${req.params.file}.txt`, 'text/plain')),
 

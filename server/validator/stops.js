@@ -36,7 +36,7 @@ export default async function () {
 	const allOsmRoutes = await allRoutesQuery.do();
 
 	for (const stop of validStops) {
-		const osmStop = osmStops[stop.id];
+		const osmStop = (osmStops[stop.id] || [])[0];
 
 		let platform = null;
 		let stopPosition = null;
@@ -78,10 +78,15 @@ export default async function () {
 			josmLink: `http://127.0.0.1:8111/load_and_zoom?left=${stop.lng - 0.001}&right=${stop.lng + 0.001}&top=${stop.lat + 0.0006}&bottom=${stop.lat - 0.0006}`,
 			stop,
 			name: stop.name,
+			names: {
+				platform: platform && (platform.tags['name:ru'] || platform.tags.name),
+				stopPosition: stopPosition && (stopPosition.tags['name:ru'] || stopPosition.tags.name),
+			},
 			platform,
 			stopPosition,
 			entrancePass,
-			invalid: !platform || !stopPosition || !entrancePass,
+			invalid: !platform || !stopPosition,
+			hasntPass: !entrancePass,
 			osmRoutes,
 			routes,
 			checkDate,
@@ -90,8 +95,11 @@ export default async function () {
 
 	data.stops = data.stops.sort(sortFunc('name'));
 
-	data.countInvalidStops = data.stops.filter(s => s.invalid).length;
+	data.countInvalidStops = data.stops.filter(s => s.invalid || s.hasntPass).length;
 	data.percentInvalidStops = Math.ceil((data.countInvalidStops / data.stops.length) * 10000) / 100;
+
+	data.countHasntPassStops = data.stops.filter(s => !s.invalid && s.hasntPass).length;
+	data.percentHasntPassStops = Math.ceil((data.countHasntPassStops / data.stops.length) * 10000) / 100;
 
 	return data;
 }
