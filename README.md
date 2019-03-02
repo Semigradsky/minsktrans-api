@@ -1,5 +1,12 @@
 [Demo here](https://rebrand.ly/minsktrans-api-demo)
 ===
+Local run
+---
+- git clone https://github.com/Semigradsky/minsktrans-api.git
+- cd minsktrans-api.git
+- npm install
+- npm run dev
+- http://localhost:8080/routes
 
 Raw files
 ---
