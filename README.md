@@ -1,4 +1,4 @@
-[Demo here](https://rebrand.ly/minsktrans-api-demo)
+[Demo here](https://rebrand.ly/minsktrans-stops)
 ===
 Local run
 ---
