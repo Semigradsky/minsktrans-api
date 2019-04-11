@@ -61,6 +61,10 @@ async function generateJSON () {
 	return places
 }
 
+export async function getAll () {
+	return JSON.parse(await getJSON());
+}
+
 export async function getValid () {
 	try {
 		return await getFileFromCache('stops-valid.json')

@@ -1,7 +1,8 @@
 import { getRawFile } from './raw'
 import { getFileFromCache, saveFileToCache } from './cache'
+import { getAll as getAllStops } from './stops';
 
-const isValidRoute = (route) => {
+function isValidRoute(route) {
 	if (route.transport === 'metro') {
 		return false;
 	}
@@ -33,42 +34,71 @@ const isValidRoute = (route) => {
 	return true;
 }
 
-const isValidStop = (stopId, pos, stops) => {
+function isValidStop(allStops, stopId, pos, stops) {
+	const stop = allStops.find(stop => stop.id === stopId);
+	if (!stop || stop.name.includes('(посадки-высадки нет)') || stop.name.includes('(техническая)')) {
+		return false;
+	}
+
 	if ([
 		'68811', // ДС Лошица-2
 		'211138', // РК Брилевичи
 		'15858', // ДС Кунцевщина
 		'69176', // ДС Серова
-		'133395', // ДС Сухарево-5 (посадки-высадки нет)
 		'68909', // ДС Ангарская-4
-		'204368', // ДС Дружная(техническая)
-		'133383', // РК Люцинская (посадки-высадки нет)
 		'297191', // Степянка (посадка пассажиров)
 		'58376', // ТЦ Ждановичи
 	].includes(stopId)) {
 		return false;
 	}
 
-	if (pos === 0 && [
-		'16007', // Красный Бор(посадки нет)
-		'133375', // Национальный аэропорт "Минск" (высадка пассажиров)
-		'15384', // Степянка (высадка пассажиров)
-		'69517', // ДС Запад-3 (посадки нет)
-		'72620', // ДС Запад-3 (высадка пассажиров)
-		'133386', // Люцинская (высадка пасссажиров)
-		'68866', // ДС Чижовка
-	].includes(stopId)) {
-		return false;
+	if (pos === 0) {
+		if (stop.name.includes('(посадки нет)') || stop.name.includes('(высадка пассажиров)')) {
+			return false;
+		}
+
+		if ([
+			'68866', // ДС Чижовка
+		].includes(stopId)) {
+			return false;
+		}
 	}
 
-	if (pos === stops.length - 1 && [
-		'73752', // Национальный аэропорт "Минск" (посадка пассажиров)
-		'15385', // Степянка (посадка пассажиров)
-	].includes(stopId)) {
-		return false;
+	if (pos === stops.length - 1) {
+		if (stop.name.includes('(посадка пассажиров)') || stop.name.includes('(посадка)'))
+
+		if ([
+			'15385', // Степянка
+		].includes(stopId)) {
+			return false;
+		}
 	}
 
 	return true;
+}
+
+function fixStops(allStops, stops) {
+	const stopsWithNames = stops.map(stop => ({
+		id: stop,
+		name: allStops.find(x => x.id === stop).name,
+	}));
+
+	const startStop = stopsWithNames.findIndex(stop => stop.name.includes('(посадка пассажиров)') || stop.name.includes('(посадка)'));
+	const endStop = stopsWithNames.findIndex(stop => stop.name.includes('(высадка пассажиров)'));
+
+	if (endStop > 0 && endStop < startStop) {
+		return stops.slice(0, endStop + 1);
+	}
+
+	if (startStop === 1) {
+		return stops.slice(startStop);
+	}
+
+	if (endStop === stops.length - 2) {
+		return stops.slice(0, -1);
+	}
+
+	return stops;
 }
 
 async function generateCSV () {
@@ -104,6 +134,11 @@ const formatId = (id) => {
 	const synonims = {
 		'133119': '16060',
 		'191178': '15999',
+		'193108': '15501',
+		'133204': '14619',
+		'133205': '14622',
+		'193111': '15540',
+		'294505': '73866', // Каменная Горка-5
 	};
 
 	if (id in synonims) {
@@ -159,8 +194,10 @@ export async function getValid() {
 			return validRoutes.findIndex((r) => stopsStr === r.stops.join(',') && r.routeNum === route.routeNum) === pos;
 		});
 
+		const allStops = await getAllStops();
+
 		validRoutes.forEach((route) => {
-			route.stops = route.stops.filter(isValidStop);
+			route.stops = fixStops(allStops, route.stops.filter((stopId, pos, stops) => isValidStop(allStops, stopId, pos, stops)));
 		});
 
 		validRoutes = JSON.stringify(validRoutes, null, 4)
