@@ -1,13 +1,52 @@
 import { logger } from './../logs'
-import { getValid as getValidStops } from './../stops'
+import { getValid as getValidStops, RawStop } from './../stops'
 import { getValid as getValidRoutes } from './../routes'
 import allStopsQuery from './../overpass/AllStopsQuery';
 import allRoutesQuery from './../overpass/AllRoutesQuery';
+import { PT_Stop, PT_EntrancePass } from '../overpass/BaseQuery';
 
 const transportNames = {
 	bus: 'Автобус',
 	trol: 'Троллейбус',
 	tram: 'Трамвай',
+}
+
+interface IStopsViewModel {
+	stops: IStopInfo[];
+	countInvalidStops: number;
+	percentInvalidStops: number;
+	countHasntPassStops: number;
+	percentHasntPassStops: number;
+}
+
+interface IStopInfo {
+	osmLink: string;
+	josmLink: string;
+	stop: RawStop;
+	name: string;
+	names: {
+		platform: string | null;
+		stopPosition: string | null;
+	}
+	platform: PT_Stop | null;
+	stopPosition: PT_Stop | null;
+	entrancePass: PT_EntrancePass | null;
+	invalid: boolean;
+	hasntPass: boolean;
+	osmRoutes: IRouteInfo[];
+	routes: Array<{
+		id: string;
+		routeNum: string;
+		name: string;
+	}>
+
+	checkDate: string | null;
+}
+
+interface IRouteInfo {
+	id: string;
+	ref: string;
+	name: string;
 }
 
 function pad(n) { return ("00000000" + n).substr(-8); }
@@ -21,32 +60,25 @@ const sortFunc = (name) => (a, b) => {
 }
 
 export default async function () {
-	const data = { stops: [] };
+	const data = { stops: [] as IStopInfo[] } as IStopsViewModel;
 
-	let osmStops = {};
-
-	try {
-		osmStops = await allStopsQuery.do();
-	} catch (err) {
-		logger.error(err);
-	}
-
-	const validRoutes = JSON.parse(await getValidRoutes());
-	const validStops = JSON.parse(await getValidStops());
+	const osmStops = await allStopsQuery.do();
+	const validRoutes = await getValidRoutes();
+	const validStops = await getValidStops();
 	const allOsmRoutes = await allRoutesQuery.do();
 
 	for (const stop of validStops) {
 		const osmStop = (osmStops[stop.id] || [])[0];
 
-		let platform = null;
-		let stopPosition = null;
-		let entrancePass = null;
-		let osmRoutes = [];
+		let platform: PT_Stop | null = null;
+		let stopPosition: PT_Stop | null = null;
+		let entrancePass: PT_EntrancePass | null = null;
+		let osmRoutes: IRouteInfo[] = [];
 
 		if (osmStop) {
-			platform = osmStop.platform;
-			stopPosition = osmStop.stopPosition;
-			entrancePass = osmStop.entrancePass;
+			platform = osmStop.platform || null;
+			stopPosition = osmStop.stopPosition || null;
+			entrancePass = osmStop.entrancePass || null;
 
 			if (osmStop.platform) {
 				osmRoutes = [].concat(
@@ -95,10 +127,10 @@ export default async function () {
 
 	data.stops = data.stops.sort(sortFunc('name'));
 
-	data.countInvalidStops = data.stops.filter(s => s.invalid || s.hasntPass).length;
+	data.countInvalidStops = data.stops.filter(s => s.invalid).length;
 	data.percentInvalidStops = Math.ceil((data.countInvalidStops / data.stops.length) * 10000) / 100;
 
-	data.countHasntPassStops = data.stops.filter(s => !s.invalid && s.hasntPass).length;
+	data.countHasntPassStops = data.stops.filter(s => s.hasntPass).length;
 	data.percentHasntPassStops = Math.ceil((data.countHasntPassStops / data.stops.length) * 10000) / 100;
 
 	return data;

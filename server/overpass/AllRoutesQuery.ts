@@ -1,6 +1,32 @@
-import BaseQuery from './BaseQuery';
+import BaseQuery, { OsmRelation, OsmTags, PT_Stop } from './BaseQuery';
 
-export default new class extends BaseQuery {
+export type SlaveRoute = {
+	id: number;
+	ref: string;
+	name: string;
+	stops: PT_Stop[];
+	tags: OsmTags;
+}
+
+export type MasterRoute = {
+	id: number;
+	ref: string;
+	name: string;
+	tags: OsmTags;
+}
+
+type RoutesInfo = {
+	masters: MasterRoute[];
+	routes: SlaveRoute[];
+}
+
+export type RoutesQueried = {
+	bus: RoutesInfo;
+	tram: RoutesInfo;
+	trolleybus: RoutesInfo;
+}
+
+class AllRoutesQuery extends BaseQuery<RoutesQueried> {
 	do() {
 		return this.fetch(`all-routes`, () => {
 			const query = (
@@ -19,17 +45,17 @@ export default new class extends BaseQuery {
 			);
 
 			return this.execute(query, (elements) => {
-				const data = {};
+				const data: Partial<RoutesQueried> = {};
 
 				['bus', 'tram', 'trolleybus'].forEach((transport) => {
 					data[transport] = {
-						masters: elements.filter(x => x.tags.type === 'route_master' && x.tags['route_master'] === transport).map(x => ({
+						masters: elements.filter(x => x.tags.type === 'route_master' && x.tags['route_master'] === transport).map((x: OsmRelation) => ({
 							id: x.id,
 							ref: x.tags.ref,
 							name: x.tags.name,
 							tags: x.tags,
 						})),
-						routes: elements.filter(x => x.tags.type === 'route' && x.tags['route'] === transport).map(x => ({
+						routes: elements.filter(x => x.tags.type === 'route' && x.tags['route'] === transport).map((x: OsmRelation) => ({
 							id: x.id,
 							ref: x.tags.ref,
 							name: x.tags.name,
@@ -41,8 +67,10 @@ export default new class extends BaseQuery {
 					};
 				});
 
-				return data;
+				return data as RoutesQueried;
 			});
 		});
 	}
 }
+
+export default new AllRoutesQuery();

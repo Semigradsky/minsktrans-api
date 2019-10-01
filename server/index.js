@@ -1,8 +1,8 @@
-import Mustache from 'mustache';
+import * as Mustache from 'mustache';
 import { send } from 'micro'
 import { router, get } from 'microrouter'
-import fs from 'fs-extra'
-import etag from 'etag';
+import * as fs from 'fs-extra'
+import * as etag from 'etag';
 
 const path = require('path');
 
@@ -73,11 +73,11 @@ export default router(
 	get('/:file.txt', (req, res) => serveFile(req, res, () => getRawFile(`${req.params.file}.txt`), `${req.params.file}.txt`, 'text/plain')),
 
 	get('/routes.json', (req, res) => serveFile(req, res, () => routes.getJSON(), 'routes.json', 'application/json')),
-	get('/routes/valid.json', (req, res) => serveFile(req, res, () => routes.getValid(), 'routes-valid.json', 'application/json')),
+	get('/routes/valid.json', (req, res) => serveFile(req, res, () => routes.getValidAsString(), 'routes-valid.json', 'application/json')),
 	get('/routes.csv', (req, res) => serveFile(req, res, () => routes.getCSV(), 'routes.csv', 'text/csv')),
 
 	get('/stops.json', (req, res) => serveFile(req, res, () => stops.getJSON(), 'stops.json', 'application/json')),
-	get('/stops/valid.json', (req, res) => serveFile(req, res, () => stops.getValid(), 'stops-valid.json', 'application/json')),
+	get('/stops/valid.json', (req, res) => serveFile(req, res, () => stops.getValidAsString(), 'stops-valid.json', 'application/json')),
 	get('/stops.csv', (req, res) => serveFile(req, res, () => stops.getCSV(), 'stops.csv', 'text/csv')),
 
 	get('/stops.kml', (req, res) => serveFile(req, res, () => getStopsKML(), 'stops.kml', 'application/vnd.google-earth.kml+xml')),

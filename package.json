@@ -5,10 +5,9 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "babel server --out-dir dist",
+    "build": "tsc",
     "prepublish": "npm run build",
     "start": "micro-serve -p 8080 dist/",
-    "dev": "babel-node run.js",
     "lint": "eslint ./server"
   },
   "repository": {
@@ -29,6 +28,11 @@
     ]
   },
   "dependencies": {
+    "@types/etag": "^1.8.0",
+    "@types/fs-extra": "^7.0.0",
+    "@types/node": "^12.0.4",
+    "@types/request": "^2.48.1",
+    "@types/request-promise": "^4.1.44",
     "etag": "^1.8.1",
     "fs-extra": "^7.0.0",
     "micro": "^9.3.3",
@@ -42,9 +46,7 @@
     "winston": "^3.1.0"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-plugin-transform-async-to-generator": "^6.24.1",
-    "babel-plugin-transform-es2015-modules-commonjs": "^6.26.0",
-    "eslint": "^5.6.1"
+    "eslint": "^5.6.1",
+    "typescript": "^3.5.1"
   }
 }

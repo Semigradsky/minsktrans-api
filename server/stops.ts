@@ -2,6 +2,15 @@ import { getRawFile } from './raw'
 import { getFileFromCache, saveFileToCache } from './cache'
 import { getValid as getValidRoutes } from './routes'
 
+export type RawStop = {
+	id: string;
+	name: string;
+	lng: number;
+	lat: number;
+	street: string | null;
+	stops: string[];
+}
+
 async function generateCSV () {
 	const stops = JSON.parse(await getJSON())
 
@@ -18,7 +27,7 @@ async function generateCSV () {
 	return result
 }
 
-const formatId = (id) => {
+const formatId = (id: string): string => {
 	const synonims = {
 		'133119': '16060'
 	};
@@ -30,15 +39,15 @@ const formatId = (id) => {
 	return id;
 }
 
-async function generateJSON () {
+async function generateJSON (): Promise<RawStop[]> {
 	const file = await getRawFile('stops.txt')
 	const lines = file.toString().trim().split('\n').slice(1)
 
-	const places = []
+	const places: RawStop[] = []
 	let prevName = ''
 	for (const line of lines) {
 		const [, id, street, name, lng, lat, stops] = (
-			/(.*?);.*?;.*?;(.*?);(.*?);.*?;(.*?);(.*?);(.*?);/.exec(line)
+			/(.*?);.*?;.*?;(.*?);(.*?);.*?;(.*?);(.*?);(.*?);/.exec(line)!
 		)
 
 		if (lng === '0' || lat === '0') {
@@ -51,8 +60,8 @@ async function generateJSON () {
 		places.push({
 			id: formatId(id),
 			name: normalizedName,
-			lng: lng / 100000,
-			lat: lat / 100000,
+			lng: +lng / 100000,
+			lat: +lat / 100000,
 			street: !street || street === '0' ? null : street,
 			stops: stops ? stops.split(',') : []
 		})
@@ -61,33 +70,46 @@ async function generateJSON () {
 	return places
 }
 
-export async function getAll () {
+export async function getAll (): Promise<RawStop[]> {
 	return JSON.parse(await getJSON());
 }
 
-export async function getValid () {
+export async function getValid (): Promise<RawStop[]> {
 	try {
-		return await getFileFromCache('stops-valid.json')
+		return JSON.parse(await getFileFromCache('stops-valid.json'))
 	} catch (err) {
-		const allStops = JSON.parse(await getJSON());
+		const validStops = await generateValid()
 
-		let validStops = [...new Set(JSON.parse(await getValidRoutes()).reduce((acc, route) => {
-			acc = [...acc, ...route.stops];
-			return acc;
-		}, []))];
-
-		validStops = JSON.stringify(
-			allStops.filter((stop) => validStops.includes(stop.id)),
-			null,
-			4
-		);
-
-		await saveFileToCache('stops-valid.json', validStops)
+		const validStopsString = JSON.stringify(validStops, null, 4);
+		await saveFileToCache('stops-valid.json', validStopsString)
 		return validStops
 	}
 }
 
-export async function getCSV () {
+export async function getValidAsString(): Promise<string> {
+	try {
+		return await getFileFromCache('stops-valid.json')
+	} catch (err) {
+		const validStops = await generateValid()
+
+		const validStopsString = JSON.stringify(validStops, null, 4);
+		await saveFileToCache('stops-valid.json', validStopsString)
+		return validStopsString
+	}
+}
+
+async function generateValid(): Promise<RawStop[]> {
+	const allStops = JSON.parse(await getJSON()) as RawStop[];
+
+	const validStops = [...new Set((await getValidRoutes()).reduce((acc, route) => {
+		acc = [...acc, ...route.stops];
+		return acc;
+	}, [] as string[]))];
+
+	return allStops.filter((stop) => validStops.includes(stop.id))
+}
+
+export async function getCSV (): Promise<string> {
 	try {
 		return await getFileFromCache('stops.csv')
 	} catch (err) {
@@ -97,7 +119,7 @@ export async function getCSV () {
 	}
 }
 
-export async function getJSON () {
+export async function getJSON (): Promise<string> {
 	try {
 		return await getFileFromCache('stops.json')
 	} catch (err) {

@@ -1,16 +1,16 @@
-import fs from 'fs-extra'
-import path from 'path'
+import * as fs from 'fs-extra'
+import * as path from 'path'
 import { logger } from './logs'
-import os from 'os'
+import * as os from 'os'
 import config from './config';
 
-export async function getMTime (fileName) {
+export async function getMTime (fileName: string): Promise<number> {
 	const fsName = path.resolve(os.tmpdir(), fileName)
 	const fstat = await fs.stat(fsName)
 	return +fstat.mtime;
 }
 
-export async function notExpired (fileName, cacheTime) {
+export async function notExpired (fileName: string, cacheTime: number): Promise<boolean> {
 	try {
 		const mtime = await getMTime(fileName)
 		return mtime + cacheTime > Date.now();
@@ -19,7 +19,7 @@ export async function notExpired (fileName, cacheTime) {
 	}
 }
 
-export async function getFileFromCache (fileName, cacheTime = config.cache.default) {
+export async function getFileFromCache (fileName: string, cacheTime: number = config.cache.default): Promise<string> {
 	const fsName = path.resolve(os.tmpdir(), fileName)
 	const fstat = await fs.stat(fsName)
 
@@ -28,12 +28,12 @@ export async function getFileFromCache (fileName, cacheTime = config.cache.defau
 		throw new Error('TOO OLD')
 	}
 
-	const file = await fs.readFile(fsName)
+	const file = await fs.readFile(fsName, 'utf8')
 	logger.info(`GET ${fileName} FROM CACHE`)
 	return file
 }
 
-export async function saveFileToCache (fileName, file) {
+export async function saveFileToCache (fileName: string, file: string): Promise<void> {
 	const fsName = path.resolve(os.tmpdir(), fileName)
 
 	try {

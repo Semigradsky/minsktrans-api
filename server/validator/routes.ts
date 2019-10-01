@@ -1,7 +1,7 @@
 import { logger } from './../logs'
-import { getValid } from './../routes'
-import allStopsQuery from './../overpass/AllStopsQuery';
-import allRoutesQuery from './../overpass/AllRoutesQuery';
+import { getValid, RawRoute } from './../routes'
+import allStopsQuery, { StopsQueried } from './../overpass/AllStopsQuery';
+import allRoutesQuery, { RoutesQueried, SlaveRoute, MasterRoute } from './../overpass/AllRoutesQuery';
 
 const transportNames = {
 	bus: 'Автобус',
@@ -9,7 +9,22 @@ const transportNames = {
 	tram: 'Трамвай',
 }
 
-function attachOSMRelation(allRoutes, route) {
+interface IRoutesViewModel {
+	routes: {
+		bus: IRouteModel[];
+		trol: IRouteModel[];
+		tram: IRouteModel[];
+	};
+}
+
+interface IRouteModel extends RawRoute {
+	name: string;
+	isValid: boolean;
+	_routes: SlaveRoute[];
+	_routesMasters: MasterRoute[];
+}
+
+function attachOSMRelation(allRoutes: RoutesQueried, route: IRouteModel) {
 	const transport = route.transport === 'trol' ? 'trolleybus' : route.transport;
 
 	if (transport === 'metro') {
@@ -20,7 +35,7 @@ function attachOSMRelation(allRoutes, route) {
 	route._routesMasters = allRoutes[transport].masters.filter(x => x.ref === route.routeNum)
 }
 
-function validateRoutes(route, osmStops) {
+function validateRoutes(route: IRouteModel, osmStops: StopsQueried) {
 	if (!route._routes || !route._routesMasters) {
 		return false;
 	}
@@ -47,20 +62,19 @@ function validateRoutes(route, osmStops) {
 
 
 export async function getRoutes() {
-	const filteredRoutes = JSON.parse(await getValid());
+	const filteredRoutes = await getValid();
 
-	const validRoutes = [];
+	const validRoutes: IRouteModel[] = [];
 
-	let routes = [];
-	let prevRoute = {};
+	let routes: IRouteModel[] = [];
+	let prevRoute: IRouteModel | null = null;
 	for (let i = 0; i < filteredRoutes.length; i++) {
-		const route = filteredRoutes[i];
+		const route = filteredRoutes[i] as IRouteModel;
 
-		if (route.routeNum === prevRoute.routeNum) {
+		if (!!prevRoute && route.routeNum === prevRoute.routeNum) {
 			route.name = `${transportNames[route.transport]} №${route.routeNum} - ${route.routeName}`;
 			routes.push(route);
 		} else {
-			prevRoute.routes = routes;
 			routes = []
 
 			validRoutes.push(route);
@@ -70,17 +84,9 @@ export async function getRoutes() {
 			routes.push(route);
 		}
 	}
-	prevRoute.routes = routes;
 
-	let allRoutes = [];
-	let allStops = [];
-
-	try {
-		allRoutes = await allRoutesQuery.do();
-		allStops = await allStopsQuery.do();
-	} catch (err) {
-		logger.error(err);
-	}
+	const allRoutes = await allRoutesQuery.do();
+	const allStops = await allStopsQuery.do();
 
 	for (const route of validRoutes) {
 		attachOSMRelation(allRoutes, route);
@@ -91,16 +97,14 @@ export async function getRoutes() {
 		acc[route.transport] = [...acc[route.transport], route];
 		return acc;
 	}, {
-		bus: [],
-		tram: [],
-		trol: [],
+		bus: [] as IRouteModel[],
+		tram: [] as IRouteModel[],
+		trol: [] as IRouteModel[],
 	});
 }
 
-export default async function () {
-	const data = {};
-
-	data.routes = await getRoutes();
-
-	return data;
+export default async function (): Promise<IRoutesViewModel> {
+	return {
+		routes: await getRoutes()
+	};
 }

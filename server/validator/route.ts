@@ -1,8 +1,9 @@
 import { logger } from './../logs'
 import * as stops from './../stops'
-import allStopsQuery from './../overpass/AllStopsQuery';
-import allRouteQuery from './../overpass/AllRoutesQuery';
-import { getValid as getValidRoutes } from './../routes';
+import allStopsQuery, { StopsQueried } from './../overpass/AllStopsQuery';
+import allRouteQuery, { SlaveRoute } from './../overpass/AllRoutesQuery';
+import { getValid as getValidRoutes, RawRoute } from './../routes';
+import { PT_Platform, PT_Stop, PT_EntrancePass } from '../overpass/BaseQuery';
 
 const transportNames = {
 	bus: 'Автобус',
@@ -10,17 +11,51 @@ const transportNames = {
 	tram: 'Трамвай',
 }
 
-export default async function routeValidator({ routeId }) {
-	const data = {};
+interface IRouteViewModel {
+	name: string;
+	route: RawRoute;
+	osmRoutes: Array<{
+		relation: SlaveRoute;
+		stops: IRouteStopInfo[];
+	}>;
+	stops: IStopInfo[];
+	noMappedStops: IStopInfo[];
+	generateOSMLink?: string;
+}
 
-	const route = JSON.parse(await getValidRoutes()).find(r => r.id === routeId);
+interface IRouteStopInfo {
+	stop: PT_Stop | null;
+	action: string | null;
+	title: string | null;
+}
+
+interface IStopInfo {
+	stop: stops.RawStop;
+	names: {
+		platform: string | null;
+		stopPosition: string | null;
+	};
+	platform: PT_Platform;
+	stopPosition: PT_Stop | null;
+	entrancePass: PT_EntrancePass | null;
+	invalid: boolean;
+	hasntPass: boolean;
+	osmLink: string;
+	josmLink: string;
+	checkDate: string | null;
+}
+
+export default async function routeValidator({ routeId }: { routeId: string }) {
+	const data = {} as IRouteViewModel;
+
+	const route = (await getValidRoutes()).find(r => r.id === routeId);
 	if (!route) {
 		return null;
 	}
 
-	const allStops = JSON.parse(await stops.getJSON());
+	const allStops = await stops.getValid();
 
-	let osmStops = {};
+	let osmStops = {} as StopsQueried;
 
 	try {
 		osmStops = await allStopsQuery.do();
@@ -33,38 +68,32 @@ export default async function routeValidator({ routeId }) {
 	data.route = route;
 	data.name = `${transportNames[route.transport]} №${route.routeNum} - ${route.routeName}`;
 
-	data.osmRoutes = (await allRouteQuery.do())[transport].routes.filter(r => r.ref === route.routeNum);
+	const osmRoutes = ((await allRouteQuery.do())[transport].routes as SlaveRoute[]).filter(r => r.ref === route.routeNum);
 
 	function isEqualRouteNames(a, b) {
 		return a.replace(/[^\u0400-\u04FF]/g, '').toLowerCase() === b.replace(/[^\u0400-\u04FF]/g, '').toLowerCase();
 	}
 
-	const filteredOsmRoutes = data.osmRoutes.filter(r => isEqualRouteNames(r.tags.name, data.name));
+	let filteredOsmRoutes = osmRoutes.filter(r => isEqualRouteNames(r.tags.name, data.name));
 
-	if (filteredOsmRoutes.length) {
-		data.osmRoutes = filteredOsmRoutes;
+	if (!filteredOsmRoutes.length) {
+		filteredOsmRoutes = osmRoutes;
 	}
 
-	data.stops = route.stops.map(s => allStops.find(ss => ss.id === s)).map(stop => {
+	data.stops = route.stops.map(s => allStops.find(ss => ss.id === s)).map((stop: stops.RawStop) => {
 		const osmStop = (osmStops[stop.id] || [])[0];
 
-		let platform = null;
-		let stopPosition = null;
-		let entrancePass = null;
+		const platform = osmStop && osmStop.platform || null;
+		const stopPosition = osmStop && osmStop.stopPosition || null;
+		const entrancePass = osmStop && osmStop.entrancePass || null;
 
-		if (osmStop) {
-			platform = osmStop.platform;
-			stopPosition = osmStop.stopPosition;
-			entrancePass = osmStop.entrancePass;
-		}
-
-		const checkDate = platform ? platform.tags['check_date'] || platform.tags['minsk_PT:checked'] : null;
+		const checkDate = platform && (platform.tags['check_date'] || platform.tags['minsk_PT:checked']) || null;
 
 		return {
 			stop,
 			names: {
-				platform: platform && (platform.tags['name:ru'] || platform.tags.name),
-				stopPosition: stopPosition && (stopPosition.tags['name:ru'] || stopPosition.tags.name),
+				platform: platform && (platform.tags['name:ru'] || platform.tags.name) || null,
+				stopPosition: stopPosition && (stopPosition.tags['name:ru'] || stopPosition.tags.name) || null,
 			},
 			platform,
 			stopPosition,
@@ -78,12 +107,12 @@ export default async function routeValidator({ routeId }) {
 	});
 	data.noMappedStops = data.stops.filter(s => !s.platform);
 
-	function isEqualStops(osmStop, stop) {
+	function isEqualStops(osmStop: PT_Stop, stop: stops.RawStop): boolean {
 		return osmStop.tags['ref:minsktrans'] === stop.id;
 	}
 
-	function mapStops(osmStops, stops) {
-		const stack = [];
+	function mapStops(osmStops: PT_Stop[], stops: IStopInfo[]): IRouteStopInfo[] {
+		const stack: IRouteStopInfo[] = [];
 		let osmStopsPtr = 0;
 		let stopsPtr = 0;
 
@@ -103,6 +132,7 @@ export default async function routeValidator({ routeId }) {
 				stack.push({
 					stop: osmStops[osmStopsPtr],
 					action: null,
+					title: null,
 				});
 				osmStopsPtr++;
 				stopsPtr++;
@@ -129,6 +159,7 @@ export default async function routeValidator({ routeId }) {
 				stack.push({
 					stop: osmStops[i],
 					action: null,
+					title: null,
 				});
 				osmStopsPtr = i;
 
@@ -157,7 +188,7 @@ export default async function routeValidator({ routeId }) {
 		return stack;
 	}
 
-	data.osmRoutes = data.osmRoutes.map(r => ({
+	data.osmRoutes = filteredOsmRoutes.map(r => ({
 		relation: r,
 		stops: mapStops(r.stops, data.stops),
 	}));
@@ -169,7 +200,7 @@ export default async function routeValidator({ routeId }) {
 	return data;
 }
 
-function generateOSMLink(routeName, transport, ref, stops) {
+function generateOSMLink(routeName: string, transport: string, ref: string, stops: IStopInfo[]): string {
 	const relationId = -Math.ceil((Math.random() * 100000));
 
 	const osmData = `<?xml version='1.0' encoding='UTF-8'?>

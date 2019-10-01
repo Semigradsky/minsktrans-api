@@ -1,5 +1,5 @@
-import serve from 'micro-core';
-import api from './server';
+const serve = require('micro-core').default;
+const api = require('./dist/').default;
 
 serve(api).listen(8080, (err) => {
   if (err) throw err;

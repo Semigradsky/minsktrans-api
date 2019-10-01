@@ -1,20 +1,20 @@
-import url from 'url'
-import request from 'request-promise'
+import * as url from 'url'
+import * as request from 'request-promise'
 import { logger } from './logs'
 import { getFileFromCache, saveFileToCache } from './cache'
 
 const BASE_URL = 'http://www.minsktrans.by/city/minsk/'
 
-async function getLiveFile (fileName) {
+async function getLiveFile (fileName: string): Promise<string> {
 	const fullPath = url.resolve(BASE_URL, fileName)
 	logger.info(`GET ${fullPath}`)
 
-	const file = await request(fullPath)
+	const file: string = await request(fullPath)
 	await saveFileToCache(fileName, file)
 	return file
 }
 
-export async function getRawFile (fileName) {
+export async function getRawFile (fileName: string): Promise<string> {
 	try {
 		return await getFileFromCache(fileName)
 	} catch (err) {
