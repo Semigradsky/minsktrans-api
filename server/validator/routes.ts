@@ -11,20 +11,27 @@ const transportNames = {
 
 interface IRoutesViewModel {
 	routes: {
-		bus: IRouteModel[];
-		trol: IRouteModel[];
-		tram: IRouteModel[];
+		bus: IRouteViewModel[];
+		trol: IRouteViewModel[];
+		tram: IRouteViewModel[];
 	};
+}
+
+interface IRouteViewModel {
+	routeNum: string;
+	routes: IRouteModel[];
+	_routes: SlaveRoute[];
+	_routesMasters: MasterRoute[];
+	isValid: boolean;
+	transport: string;
 }
 
 interface IRouteModel extends RawRoute {
 	name: string;
 	isValid: boolean;
-	_routes: SlaveRoute[];
-	_routesMasters: MasterRoute[];
 }
 
-function attachOSMRelation(allRoutes: RoutesQueried, route: IRouteModel) {
+function attachOSMRelation(allRoutes: RoutesQueried, route: IRouteViewModel) {
 	const transport = route.transport === 'trol' ? 'trolleybus' : route.transport;
 
 	if (transport === 'metro') {
@@ -35,7 +42,7 @@ function attachOSMRelation(allRoutes: RoutesQueried, route: IRouteModel) {
 	route._routesMasters = allRoutes[transport].masters.filter(x => x.ref === route.routeNum)
 }
 
-function validateRoutes(route: IRouteModel, osmStops: StopsQueried) {
+function validateRoutes(route: IRouteViewModel, stops: string[], osmStops: StopsQueried) {
 	if (!route._routes || !route._routesMasters) {
 		return false;
 	}
@@ -45,11 +52,11 @@ function validateRoutes(route: IRouteModel, osmStops: StopsQueried) {
 	}
 
 	return route._routes.some(r => {
-		if (route.stops.length !== r.stops.length) {
+		if (stops.length !== r.stops.length) {
 			return false;
 		}
 
-		return route.stops.every((refMinskTrans, pos) => {
+		return stops.every((refMinskTrans, pos) => {
 			if (!osmStops[refMinskTrans]) {
 				return false;
 			}
@@ -64,25 +71,34 @@ function validateRoutes(route: IRouteModel, osmStops: StopsQueried) {
 export async function getRoutes() {
 	const filteredRoutes = await getValid();
 
-	const validRoutes: IRouteModel[] = [];
+	const validRoutes: IRouteViewModel[] = [];
 
-	let routes: IRouteModel[] = [];
-	let prevRoute: IRouteModel | null = null;
+	let prevRoute: IRouteViewModel | null = null;
 	for (let i = 0; i < filteredRoutes.length; i++) {
 		const route = filteredRoutes[i] as IRouteModel;
+		route.name = `${transportNames[route.transport]} №${route.routeNum} - ${route.routeName}`;
 
-		if (!!prevRoute && route.routeNum === prevRoute.routeNum) {
-			route.name = `${transportNames[route.transport]} №${route.routeNum} - ${route.routeName}`;
-			routes.push(route);
-		} else {
-			routes = []
-
-			validRoutes.push(route);
-
-			prevRoute = route;
-			route.name = `${transportNames[route.transport]} №${route.routeNum} - ${route.routeName}`;
-			routes.push(route);
+		if (prevRoute && route.routeNum === prevRoute.routeNum && route.transport === prevRoute.transport) {
+			prevRoute.routes.push(route);
+			continue;
 		}
+
+		if (prevRoute) {
+			validRoutes.push(prevRoute);
+		}
+
+		prevRoute = {
+			routeNum: route.routeNum,
+			isValid: false,
+			routes: [route],
+			transport: route.transport,
+			_routes: [],
+			_routesMasters: [],
+		};
+	}
+
+	if (prevRoute) {
+		validRoutes.push(prevRoute);
 	}
 
 	const allRoutes = await allRoutesQuery.do();
@@ -90,16 +106,86 @@ export async function getRoutes() {
 
 	for (const route of validRoutes) {
 		attachOSMRelation(allRoutes, route);
-		route.isValid = validateRoutes(route, allStops);
+		route.routes.forEach(r => {
+			r.isValid = validateRoutes(route, r.stops, allStops);
+		});
+
+		route.isValid = route.routes.reduce((acc, r) => acc && r.isValid, true)
 	}
+
+	['bus', 'tram', 'trolleybus'].map(tr => {
+		const transport = tr === 'trolleybus' ? 'trol' : tr;
+
+		allRoutes[tr].routes.forEach(r => {
+			if (!r.ref) {
+				let unknownRoutesIndex = validRoutes.findIndex(vr => vr.routeNum === '-');
+				if (unknownRoutesIndex === -1) {
+					validRoutes.unshift({
+						_routes: [],
+						_routesMasters: [],
+						isValid: false,
+						routeNum: '-',
+						routes: [],
+						transport,
+					});
+					unknownRoutesIndex = 0;
+				}
+				
+				validRoutes[unknownRoutesIndex]._routes.push(r);
+				return;
+			}
+
+			if (!validRoutes.find(vr => vr.routeNum === r.ref)) {
+				validRoutes.push({
+					_routes: [r],
+					_routesMasters: [],
+					isValid: false,
+					routeNum: r.ref,
+					routes: [],
+					transport,
+				})
+			}
+		});
+
+		allRoutes[tr].masters.forEach(m => {
+			if (!m.ref) {
+				let unknownRoutesIndex = validRoutes.findIndex(vr => vr.routeNum === '-');
+				if (unknownRoutesIndex === -1) {
+					validRoutes.unshift({
+						_routes: [],
+						_routesMasters: [],
+						isValid: false,
+						routeNum: '-',
+						routes: [],
+						transport,
+					});
+					unknownRoutesIndex = 0;
+				}
+
+				validRoutes[unknownRoutesIndex]._routesMasters.push(m);
+				return;
+			}
+
+			if (!validRoutes.find(vr => vr.routeNum === m.ref)) {
+				validRoutes.push({
+					_routes: [],
+					_routesMasters: [m],
+					isValid: false,
+					routeNum: m.ref,
+					routes: [],
+					transport,
+				})
+			}
+		});
+	});
 
 	return validRoutes.reduce((acc, route) => {
 		acc[route.transport] = [...acc[route.transport], route];
 		return acc;
 	}, {
-		bus: [] as IRouteModel[],
-		tram: [] as IRouteModel[],
-		trol: [] as IRouteModel[],
+		bus: [] as IRouteViewModel[],
+		tram: [] as IRouteViewModel[],
+		trol: [] as IRouteViewModel[],
 	});
 }
 

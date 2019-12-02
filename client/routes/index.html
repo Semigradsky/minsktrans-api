@@ -18,6 +18,9 @@
 	tr.valid {
 		background: #e0ffe0;
 	}
+	tr .valid {
+		background: #e0ffe0;
+	}
 	tr.invalid {
 		background: #f2dcdc;
 	}
@@ -47,7 +50,7 @@
 					<td>{{routeNum}}</td>
 					<td>
 						{{#routes}}
-						<div>
+						<div {{#isValid}}class="valid"{{/isValid}}>
 							<a href="/route/{{id}}" target="_blank">{{name}}</a>
 						</div>
 						{{/routes}}
@@ -89,7 +92,7 @@
 					<td>{{routeNum}}</td>
 					<td>
 						{{#routes}}
-						<div>
+						<div {{#isValid}}class="valid"{{/isValid}}>
 							<a href="/route/{{id}}" target="_blank">{{name}}</a>
 						</div>
 						{{/routes}}
@@ -131,7 +134,7 @@
 					<td>{{routeNum}}</td>
 					<td>
 						{{#routes}}
-						<div>
+						<div {{#isValid}}class="valid"{{/isValid}}>
 							<a href="/route/{{id}}" target="_blank">{{name}}</a>
 						</div>
 						{{/routes}}

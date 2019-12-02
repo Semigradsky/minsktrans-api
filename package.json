@@ -21,12 +21,6 @@
     "url": "https://github.com/Semigradsky/minsktrans-api/issues"
   },
   "homepage": "https://github.com/Semigradsky/minsktrans-api#readme",
-  "babel": {
-    "plugins": [
-      "transform-es2015-modules-commonjs",
-      "transform-async-to-generator"
-    ]
-  },
   "dependencies": {
     "@types/etag": "^1.8.0",
     "@types/fs-extra": "^7.0.0",
@@ -47,6 +41,6 @@
   },
   "devDependencies": {
     "eslint": "^5.6.1",
-    "typescript": "^3.5.1"
+    "typescript": "^3.7.2"
   }
 }

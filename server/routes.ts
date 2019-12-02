@@ -94,7 +94,9 @@ function isValidStop(allStops: RawStop[], stopId: string, pos: number, stops: st
 	}
 
 	if (pos === stops.length - 1) {
-		if (isStartStop(stop.name))
+		if (isStartStop(stop.name)) {
+			return false;
+		}
 
 		if ([
 			'15385', // Степянка
@@ -169,6 +171,9 @@ const formatId = (id: string): string => {
 		'193111': '15540',
 		'294505': '73866', // Каменная Горка-5
 		'297273': '69517', // ДС ''Запад-3''
+		'297262': '297265', // Боровлянская школа №3
+		'298016': '15562', // ДС ''Одоевского''
+		'294624': '133183', // ТЦ "Ждановичи" (высадка пассажиров)
 	};
 
 	if (id in synonims) {
