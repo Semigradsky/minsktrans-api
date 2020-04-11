@@ -24,12 +24,10 @@ export async function getFileFromCache (fileName: string, cacheTime: number = co
 	const fstat = await fs.stat(fsName)
 
 	if (+fstat.mtime + cacheTime < Date.now()) {
-		logger.info(`${fileName} is old, need getting new file`)
 		throw new Error('TOO OLD')
 	}
 
 	const file = await fs.readFile(fsName, 'utf8')
-	logger.info(`GET ${fileName} FROM CACHE`)
 	return file
 }
 
@@ -38,7 +36,6 @@ export async function saveFileToCache (fileName: string, file: string): Promise<
 
 	try {
 		await fs.writeFile(fsName, file)
-		logger.info(`${fileName} saved to cache`)
 	} catch (err) {
 		logger.error(`${fsName} failed for save to cache`)
 	}

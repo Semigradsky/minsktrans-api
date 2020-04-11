@@ -56,7 +56,7 @@ async function serveFile (req, res, fileGetter, cacheKey, contentType = 'text/pl
 	}, contentType, cacheTime);
 }
 
-async function serveHTML (req, res, dataAsyncGetter, fileName, cacheKey, cacheTime = config.cache.overpass.default) {
+async function serveHTML (req, res, dataAsyncGetter, fileName, cacheKey, cacheTime = config.cache.default) {
 	return serveWithCache(req, res, cacheKey, async (params) => {
 		const document = path.join(__dirname, '/../client', fileName);
 		const template = await fs.readFile(document, 'utf8');

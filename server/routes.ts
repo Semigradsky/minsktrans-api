@@ -77,7 +77,12 @@ function isValidStop(allStops: RawStop[], stopId: string, pos: number, stops: st
 		'68909', // ДС Ангарская-4
 		'297191', // Степянка (посадка пассажиров)
 		'58376', // ТЦ Ждановичи
+		'15836', // ДС Курасовщина
 	].includes(stopId)) {
+		return false;
+	}
+
+	if (pos && formatId(stops[pos - 1]) === formatId(stopId)) {
 		return false;
 	}
 
@@ -88,6 +93,7 @@ function isValidStop(allStops: RawStop[], stopId: string, pos: number, stops: st
 
 		if ([
 			'68866', // ДС Чижовка
+			'16007', // Красный Бор
 		].includes(stopId)) {
 			return false;
 		}
@@ -174,6 +180,8 @@ const formatId = (id: string): string => {
 		'297262': '297265', // Боровлянская школа №3
 		'298016': '15562', // ДС ''Одоевского''
 		'294624': '133183', // ТЦ "Ждановичи" (высадка пассажиров)
+		'271134': '69234', // Веснинка, 10
+		'295003': '187016', // Каменная Горка-5
 	};
 
 	if (id in synonims) {
