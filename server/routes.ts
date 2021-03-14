@@ -78,6 +78,8 @@ function isValidStop(allStops: RawStop[], stopId: string, pos: number, stops: st
 		'297191', // Степянка (посадка пассажиров)
 		'58376', // ТЦ Ждановичи
 		'15836', // ДС Курасовщина
+		'54638', // ДС ''Малиновка-4''
+		'54682', // ДС ''Юго-Запад''
 	].includes(stopId)) {
 		return false;
 	}
@@ -94,6 +96,7 @@ function isValidStop(allStops: RawStop[], stopId: string, pos: number, stops: st
 		if ([
 			'68866', // ДС Чижовка
 			'16007', // Красный Бор
+			'15227', // ДС Масюковщина
 		].includes(stopId)) {
 			return false;
 		}

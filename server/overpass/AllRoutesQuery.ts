@@ -6,6 +6,7 @@ export type SlaveRoute = {
 	name: string;
 	stops: PT_Stop[];
 	tags: OsmTags;
+	disused: boolean;
 }
 
 export type MasterRoute = {
@@ -13,6 +14,7 @@ export type MasterRoute = {
 	ref: string;
 	name: string;
 	tags: OsmTags;
+	disused: boolean;
 }
 
 type RoutesInfo = {
@@ -49,13 +51,22 @@ class AllRoutesQuery extends BaseQuery<RoutesQueried> {
 
 				['bus', 'tram', 'trolleybus'].forEach((transport) => {
 					data[transport] = {
-						masters: elements.filter(x => x.tags.type === 'route_master' && x.tags['route_master'] === transport).map((x: OsmRelation) => ({
+						masters: elements.filter(
+							x =>
+								(x.tags.type === 'route_master' || x.tags.type === 'disused:route_master')
+								&& x.tags['route_master'] === transport
+						).map((x: OsmRelation) => ({
 							id: x.id,
 							ref: x.tags.ref,
 							name: x.tags.name,
 							tags: x.tags,
+							disused: x.tags.type === 'disused:route_master',
 						})),
-						routes: elements.filter(x => x.tags.type === 'route' && x.tags['route'] === transport).map((x: OsmRelation) => ({
+						routes: elements.filter(
+							x =>
+								(x.tags.type === 'route' || x.tags.type === 'disused:route')
+								&& x.tags['route'] === transport
+						).map((x: OsmRelation) => ({
 							id: x.id,
 							ref: x.tags.ref,
 							name: x.tags.name,
@@ -63,6 +74,7 @@ class AllRoutesQuery extends BaseQuery<RoutesQueried> {
 								elements.find(e => e.id === m.ref)
 							).filter(x => !!x),
 							tags: x.tags,
+							disused: x.tags.type === 'disused:route',
 						})),
 					};
 				});

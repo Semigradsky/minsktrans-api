@@ -130,7 +130,7 @@ export async function getRoutes() {
 					});
 					unknownRoutesIndex = 0;
 				}
-				
+
 				validRoutes[unknownRoutesIndex]._routes.push(r);
 				return;
 			}

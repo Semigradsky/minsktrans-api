@@ -215,8 +215,8 @@ function generateOSMLink(routeName: string, transport: string, ref: string, stop
 			(s.stopPosition ? `<member type='node' ref='${s.stopPosition.id}' role='${stopRole}' />\n` : '') +
 			`<member type='${s.platform.type}' ref='${s.platform.id}' role='${platformRole}' />`
 		);
-	})) + `
-		<tag k='name' v='${routeName}' />
+	})).join('') + `
+		<tag k='name' v='${routeName.replace(/\'/g, '"')}' />
 		<tag k='route' v='${transport}' />
 		<tag k='type' v='route' />
 		<tag k='public_transport:version' v='2' />
